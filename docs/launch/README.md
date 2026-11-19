@@ -32,6 +32,11 @@
 
 ## 文件
 
-- [`v2ex.md`](v2ex.md)
-- [`sspai.md`](sspai.md)
-- [`reddit.md`](reddit.md)
+- 带发布备注的版本：
+  - [`v2ex.md`](v2ex.md)
+  - [`sspai.md`](sspai.md)
+  - [`reddit.md`](reddit.md)
+- 可直接复制发布的纯正文版本：
+  - [`v2ex-post.txt`](v2ex-post.txt)
+  - [`sspai-post.md`](sspai-post.md)
+  - [`reddit-post.md`](reddit-post.md)
