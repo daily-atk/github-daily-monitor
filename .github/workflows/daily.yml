@@ -16,6 +16,13 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # secrets 不能在 if 条件里直接引用，需先映射到 env 再判断
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+      LLM_PRICE_INPUT_PER_1M: ${{ secrets.LLM_PRICE_INPUT_PER_1M }}
+      LLM_PRICE_OUTPUT_PER_1M: ${{ secrets.LLM_PRICE_OUTPUT_PER_1M }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -35,10 +42,21 @@ jobs:
           path: site
         continue-on-error: true
 
-      - name: Generate today's report
+      - name: Collect candidates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python monitor.py run
+        run: python monitor.py collect
+
+      # 可选 AI 增强：仅在仓库配置了 LLM_API_KEY + LLM_MODEL 时执行；
+      # 未配置则跳过，报告自动使用规则兜底文案（不影响发布）。
+      - name: AI enrichment (optional)
+        if: ${{ env.LLM_API_KEY != '' && env.LLM_MODEL != '' }}
+        run: |
+          python enrich.py --enable --max-cost 0.05
+          python monitor.py validate || true
+
+      - name: Generate today's report
+        run: python monitor.py report
 
       - name: Merge report into site
         run: |

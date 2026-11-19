@@ -1,16 +1,10 @@
-<!--
-仓库名建议：github-daily-monitor
-仓库描述：每天自动筛选对普通人真正有用的 GitHub 项目，生成中文 HTML 日报。零依赖，支持去重、领域配额与可选 AI 润色。
-Topics：github, daily-digest, chinese, python, automation, self-hosted, github-actions
--->
-
 # 每日 GitHub 监测助手
 
 [English](README.en.md) ｜ **中文**
 
 每天自动从 GitHub 捞出「对普通人真正有用」的新项目 / 有重要更新的项目，筛选后生成一份简洁总结（Markdown + HTML），按推荐优先级排序。**同一项目 30 天内不重复推荐。**
 
-> **English**: A zero-dependency Python tool that turns GitHub into a daily Chinese digest for non-technical people — with 30-day dedup, domain quotas, and optional AI summaries. It outputs Markdown + HTML and can be published as a static site via GitHub Actions + Pages. MIT licensed; not affiliated with GitHub.
+> **English**: github-daily-monitor.
 
 ## 快速开始
 
@@ -75,29 +69,29 @@ python enrich.py --enable --max-cost 0.05
 
 ## 文件结构
 
-| 文件 | 作用 |
-|---|---|
-| `config.json` | **用户配置**：关键词、排除词、时间、阈值、Top N、输出格式 |
-| `monitor.py` | 主程序（collect / report / run / stats / validate 五个命令） |
-| `enrich.py` | 可选的 AI 文案增强（OpenAI 兼容，默认关闭） |
-| `lib/` | 采集、过滤、打分、报告生成模块 |
-| `tools/build_index.py` | 生成历史归档索引页 |
-| `AI_WORKFLOW.md` | 每日自动化 AI 的执行说明（作业指导书） |
-| `README.en.md` | 英文说明 |
-| `新手使用说明.md` | 面向零基础用户的步骤说明 |
-| `docs/launch/` | V2EX / 少数派 / Reddit 发布文案 |
-| `运行日报.bat` | Windows 双击运行一次完整流程 |
-| `run.sh` | macOS / Linux 一键运行 |
-| `打开今日报告.bat` | 双击打开最新报告 |
-| `data/history.json` | 历史去重记录（自动生成，勿手改） |
-| `data/run.log` | 运行日志（排查失败用，超过 1MB 自动轮转） |
-| `data/candidates_latest.json` | 最新候选数据 |
-| `data/enriched_latest.json` | AI 增强数据（可选，由 AI 生成） |
-| `data/enriched_latest.example.json` | AI 增强数据格式示例 |
-| `tests/` | 单元测试（标准库 unittest，不发真实 API 请求） |
-| `.github/workflows/ci.yml` | GitHub Actions：语法检查 + 单元测试 |
-| `.github/workflows/daily.yml` | GitHub Actions：每日定时运行并发布到 GitHub Pages |
-| `reports/` | 每日报告输出 |
+| 文件                                  | 作用                                                  |
+| ----------------------------------- | --------------------------------------------------- |
+| `config.json`                       | **用户配置**：关键词、排除词、时间、阈值、Top N、输出格式                   |
+| `monitor.py`                        | 主程序（collect / report / run / stats / validate 五个命令） |
+| `enrich.py`                         | 可选的 AI 文案增强（OpenAI 兼容，默认关闭）                         |
+| `lib/`                              | 采集、过滤、打分、报告生成模块                                     |
+| `tools/build_index.py`              | 生成历史归档索引页                                           |
+| `AI_WORKFLOW.md`                    | 每日自动化 AI 的执行说明（作业指导书）                               |
+| `README.en.md`                      | 英文说明                                                |
+| `新手使用说明.md`                         | 面向零基础用户的步骤说明                                        |
+| `docs/launch/`                      | V2EX / 少数派 / Reddit 发布文案                            |
+| `运行日报.bat`                          | Windows 双击运行一次完整流程                                  |
+| `run.sh`                            | macOS / Linux 一键运行                                  |
+| `打开今日报告.bat`                        | 双击打开最新报告                                            |
+| `data/history.json`                 | 历史去重记录（自动生成，勿手改）                                    |
+| `data/run.log`                      | 运行日志（排查失败用，超过 1MB 自动轮转）                             |
+| `data/candidates_latest.json`       | 最新候选数据                                              |
+| `data/enriched_latest.json`         | AI 增强数据（可选，由 AI 生成）                                 |
+| `data/enriched_latest.example.json` | AI 增强数据格式示例                                         |
+| `tests/`                            | 单元测试（标准库 unittest，不发真实 API 请求）                      |
+| `.github/workflows/ci.yml`          | GitHub Actions：语法检查 + 单元测试                          |
+| `.github/workflows/daily.yml`       | GitHub Actions：每日定时运行并发布到 GitHub Pages              |
+| `reports/`                          | 每日报告输出                                              |
 
 ## 常用命令
 
@@ -137,7 +131,7 @@ python -m unittest discover -s tests -v   # 运行单元测试
 
 匿名访问 GitHub Search API 限流很低（约 10 次/分钟，容易 403）。配置 Token 后可大幅提速：
 
-1. 到 https://github.com/settings/tokens 生成一个 Token（classic 版无需勾选任何权限；fine-grained 版不授权任何仓库即可）。
+1. 到 <https://github.com/settings/tokens> 生成一个 Token（classic 版无需勾选任何权限；fine-grained 版不授权任何仓库即可）。
 2. 设置环境变量（把引号里换成你的 token）：
 
 Windows（命令提示符）：
@@ -153,7 +147,7 @@ export GITHUB_TOKEN="ghp_你的token"
 # 想永久生效，把这行写入 ~/.bashrc 或 ~/.zshrc
 ```
 
-3. **Windows 需要关掉命令窗口再重新打开**（环境变量只对新窗口生效），运行 `echo %GITHUB_TOKEN%` 能看到内容即成功；macOS/Linux 用 `echo $GITHUB_TOKEN`。
+1. **Windows 需要关掉命令窗口再重新打开**（环境变量只对新窗口生效），运行 `echo %GITHUB_TOKEN%` 能看到内容即成功；macOS/Linux 用 `echo $GITHUB_TOKEN`。
 
 脚本会自动读取 `config.json` 里 `github_token_env` 指定的变量名。不配置也能用，只是采集时部分查询可能因限流被跳过。
 
