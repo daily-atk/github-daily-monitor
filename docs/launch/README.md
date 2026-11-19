@@ -1,5 +1,7 @@
 # 发布文案与操作清单
 
+> 更多渠道（HelloGitHub、掘金 / OSChina、Hacker News、Product Hunt、X）见 [`../promotion/`](../promotion/)。
+
 三套文案分别面向 V2EX、少数派、Reddit。仓库与 Demo 地址已填为 `daily-atk`；如更换仓库，请全局替换文案里的地址。
 
 ## 发布前检查
