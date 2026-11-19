@@ -38,7 +38,7 @@ chmod +x run.sh
 
 ![每日报告截图](docs/screenshot.png)
 
-在线 Demo：部署 GitHub Pages 后访问 `https://<你的用户名>.github.io/<仓库名>/`（配置见下文）。
+在线 Demo：部署 GitHub Pages 后访问 `https://daily-atk.github.io/github-daily-monitor/`（配置见下文）。
 
 ## 它怎么工作
 
@@ -170,7 +170,7 @@ export GITHUB_TOKEN="ghp_你的token"
 
 1. 在 Actions 里手动运行一次 **Daily Digest**；
 2. 仓库 **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**，分支选 **gh-pages** / root，保存；
-3. 访问 `https://<你的用户名>.github.io/<仓库名>/`。
+3. 访问 `https://daily-atk.github.io/github-daily-monitor/`。
 
 可以本地预览归档页：
 

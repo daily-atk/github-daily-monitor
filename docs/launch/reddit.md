@@ -45,7 +45,7 @@ It is a **tool**, not a hand-curated magazine. You can run it with your own keyw
 **Quick start**
 
 ```bash
-git clone <REPO_URL>
+git clone https://github.com/daily-atk/github-daily-monitor.git
 cd github-daily-monitor
 ./run.sh          # macOS/Linux
 # or double-click 运行日报.bat on Windows
@@ -58,8 +58,8 @@ cd github-daily-monitor
 - It does not guarantee 10 items per day; it prefers fewer, better items.
 - It only aggregates public information and never installs anything.
 
-Repo: <REPO_URL>
-Demo: <DEMO_URL>
+Repo: https://github.com/daily-atk/github-daily-monitor
+Demo: https://daily-atk.github.io/github-daily-monitor/
 
 I'd love feedback on two things: which projects should be filtered out, and whether the "ordinary people" framing is clear. I'm the author and this is open source — happy to answer questions.
 

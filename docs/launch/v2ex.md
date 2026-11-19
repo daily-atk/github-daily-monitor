@@ -36,8 +36,8 @@
 - 不会自动安装任何被推荐的项目
 - 和 GitHub 官方没有关系
 
-项目地址：<REPO_URL>
-在线 Demo：<DEMO_URL>
+项目地址：https://github.com/daily-atk/github-daily-monitor
+在线 Demo：https://daily-atk.github.io/github-daily-monitor/
 
 MIT 许可，欢迎拍砖，尤其是「哪些项目不该被推」这类反馈。
 

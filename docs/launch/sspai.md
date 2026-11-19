@@ -73,8 +73,8 @@ python enrich.py --enable --max-cost 0.05
 - 更细的领域预设（例如只关注健康 / 财务）
 - 可选的多来源摘要（Hacker News、Product Hunt）
 
-项目地址：<REPO_URL>
-在线 Demo：<DEMO_URL>
+项目地址：https://github.com/daily-atk/github-daily-monitor
+在线 Demo：https://daily-atk.github.io/github-daily-monitor/
 
 ---
 

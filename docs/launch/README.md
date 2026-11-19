@@ -1,6 +1,6 @@
 # 发布文案与操作清单
 
-三套文案分别面向 V2EX、少数派、Reddit。发布前请先完成下面的检查，并替换文案里的 `<REPO_URL>` 与 `<DEMO_URL>`。
+三套文案分别面向 V2EX、少数派、Reddit。仓库与 Demo 地址已填为 `daily-atk`；如更换仓库，请全局替换文案里的地址。
 
 ## 发布前检查
 
@@ -8,7 +8,8 @@
 - [ ] GitHub Pages 已启用，Demo 可访问
 - [ ] README 首屏截图显示正常
 - [ ] 已打 tag：`v0.1.0`
-- [ ] 已替换 `<REPO_URL>` / `<DEMO_URL>`
+- [x] 仓库地址已填：https://github.com/daily-atk/github-daily-monitor
+- [x] Demo 地址已填：https://daily-atk.github.io/github-daily-monitor/
 - [ ] 确认 LICENSE、NOTICE、免责声明存在
 - [ ] 准备 1-2 张截图（`docs/screenshot.png` 可直接用）
 - [ ] 想好三个高频问题的回答：

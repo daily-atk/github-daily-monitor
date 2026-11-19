@@ -144,7 +144,7 @@ The repository includes `.github/workflows/daily.yml`:
 1. Run the **Daily Digest** workflow once from the Actions tab.
 2. Go to **Settings → Pages → Build and deployment → Source** and choose **Deploy from a branch**.
 3. Select the **`gh-pages`** branch and `/ (root)`, then save.
-4. Visit `https://<your-user>.github.io/<repo>/`.
+4. Visit `https://daily-atk.github.io/github-daily-monitor/`.
 
 The workflow runs daily at **12:00 UTC (20:00 Asia/Shanghai)**, generates the report, merges it into the existing site, rebuilds the archive index, and publishes to `gh-pages`. GitHub Actions cron may run a few minutes late.
 
