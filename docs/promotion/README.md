@@ -12,6 +12,9 @@
 | Hacker News | [`hacker-news.md`](hacker-news.md) | Show HN | 英文，技术受众 |
 | Product Hunt | [`product-hunt.md`](product-hunt.md) | 产品发布 | 英文，需 logo/gallery |
 | Twitter / X | [`twitter-thread.md`](twitter-thread.md) | 7 条 thread | 英文 |
+| 小红书 | [`xiaohongshu-daily.md`](xiaohongshu-daily.md) | 日更模板 + 今日示例 | 5 个项目卡片，正文不放外链 |
+| 知乎 | [`zhihu-daily.md`](zhihu-daily.md) | 想法日更 + 文章周更 | 长文吃搜索流量 |
+| 即刻 | [`jike-daily.md`](jike-daily.md) | 日更短帖 + 周复盘 | 真实语气，结尾提问 |
 
 另见 [`docs/launch/`](../launch/) 里的 V2EX、少数派、Reddit 通用稿和即刻可用素材。
 
