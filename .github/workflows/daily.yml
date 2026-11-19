@@ -1,0 +1,63 @@
+name: Daily Digest
+
+on:
+  schedule:
+    # GitHub Actions 使用 UTC；12:00 UTC = 20:00 Asia/Shanghai
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Restore published site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+        continue-on-error: true
+
+      - name: Generate today's report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python monitor.py run
+
+      - name: Merge report into site
+        run: |
+          mkdir -p site
+          rm -rf site/.git
+          cp reports/github-daily-*.html site/ 2>/dev/null || true
+          cp reports/github-daily-*.md site/ 2>/dev/null || true
+
+      - name: Build archive index
+        env:
+          REPO_URL: https://github.com/${{ github.repository }}
+        run: python tools/build_index.py site
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: "docs: update daily digest"

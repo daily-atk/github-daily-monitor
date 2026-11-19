@@ -8,6 +8,8 @@ Topics：github, daily-digest, chinese, python, automation, self-hosted, github-
 
 每天自动从 GitHub 捞出「对普通人真正有用」的新项目 / 有重要更新的项目，筛选后生成一份简洁总结（Markdown + HTML），按推荐优先级排序。**同一项目 30 天内不重复推荐。**
 
+> **English**: A zero-dependency Python tool that turns GitHub into a daily Chinese digest for non-technical people — with 30-day dedup, domain quotas, and optional AI summaries. It outputs Markdown + HTML and can be published as a static site via GitHub Actions + Pages. MIT licensed; not affiliated with GitHub.
+
 ## 快速开始
 
 ### Windows
@@ -38,10 +40,9 @@ chmod +x run.sh
 
 ## 演示
 
-> 截图占位：运行后把 `reports/github-daily-*.html` 截图保存为 `docs/screenshot.png`，再取消下面一行注释。
-<!-- ![报告截图](docs/screenshot.png) -->
+![每日报告截图](docs/screenshot.png)
 
-在线 Demo：部署 GitHub Pages 后补充（见 Roadmap）。
+在线 Demo：部署 GitHub Pages 后访问 `https://<你的用户名>.github.io/<仓库名>/`（配置见下文）。
 
 ## 它怎么工作
 
@@ -58,13 +59,27 @@ chmod +x run.sh
 - **想要更具体的文案**：按 [`AI_WORKFLOW.md`](AI_WORKFLOW.md) 让 AI 读取候选并生成 `data/enriched_latest.json`，再运行 `python monitor.py report`。
 - **格式示例**：[`data/enriched_latest.example.json`](data/enriched_latest.example.json)。
 
+也可以使用内置的 `enrich.py`（任意 OpenAI 兼容接口）：
+
+```bash
+export LLM_API_KEY="..."
+export LLM_MODEL="deepseek-chat"
+export LLM_BASE_URL="https://api.deepseek.com/v1"   # 任意 OpenAI 兼容地址
+python enrich.py --dry-run
+python enrich.py --enable --max-cost 0.05
+```
+
+费用上限需同时设置 `LLM_PRICE_INPUT_PER_1M` / `LLM_PRICE_OUTPUT_PER_1M`；不加 `--enable` 时绝不会调用接口。
+
 ## 文件结构
 
 | 文件 | 作用 |
 |---|---|
 | `config.json` | **用户配置**：关键词、排除词、时间、阈值、Top N、输出格式 |
 | `monitor.py` | 主程序（collect / report / run / stats / validate 五个命令） |
+| `enrich.py` | 可选的 AI 文案增强（OpenAI 兼容，默认关闭） |
 | `lib/` | 采集、过滤、打分、报告生成模块 |
+| `tools/build_index.py` | 生成历史归档索引页 |
 | `AI_WORKFLOW.md` | 每日自动化 AI 的执行说明（作业指导书） |
 | `新手使用说明.md` | 面向零基础用户的步骤说明 |
 | `运行日报.bat` | Windows 双击运行一次完整流程 |
@@ -77,6 +92,7 @@ chmod +x run.sh
 | `data/enriched_latest.example.json` | AI 增强数据格式示例 |
 | `tests/` | 单元测试（标准库 unittest，不发真实 API 请求） |
 | `.github/workflows/ci.yml` | GitHub Actions：语法检查 + 单元测试 |
+| `.github/workflows/daily.yml` | GitHub Actions：每日定时运行并发布到 GitHub Pages |
 | `reports/` | 每日报告输出 |
 
 ## 常用命令
@@ -90,6 +106,9 @@ python monitor.py run        # 采集+报告一步到位
 python monitor.py run --force  # 今天已有候选也强制重新采集
 python monitor.py stats      # 查看历史去重库统计
 python monitor.py validate   # 校验 AI 增强数据是否与当日候选一致
+python enrich.py --dry-run   # 查看 AI 增强 prompt 与预估费用（不发请求）
+python enrich.py --enable    # 调用 LLM 生成增强数据（可选）
+python tools/build_index.py site   # 生成历史归档索引页
 python -m unittest discover -s tests -v   # 运行单元测试
 ```
 
@@ -140,9 +159,28 @@ export GITHUB_TOKEN="ghp_你的token"
 
 - **Windows**：用「任务计划程序」定时运行 `运行日报.bat`；
 - **macOS / Linux**：用 `cron` 定时运行 `./run.sh`；
+- **GitHub Actions**：直接使用仓库自带的 `.github/workflows/daily.yml`（见下一节）；
 - 或使用支持定时任务的 AI 助手 / 自动化工具，按 `AI_WORKFLOW.md` 执行。
 
 每次运行都会在 `data/run.log` 追加记录（开始/结束、查询数、过滤统计、异常堆栈）。日志超过 1MB 会自动轮转为 `run.log.1`。定时任务失败时先看这里。
+
+## 发布到 GitHub Pages（可选）
+
+仓库自带 `.github/workflows/daily.yml`：每天 UTC 12:00（北京时间 20:00）运行，生成当天日报并发布到 `gh-pages` 分支，同时更新历史归档索引页。
+
+首次使用：
+
+1. 在 Actions 里手动运行一次 **Daily Digest**；
+2. 仓库 **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**，分支选 **gh-pages** / root，保存；
+3. 访问 `https://<你的用户名>.github.io/<仓库名>/`。
+
+可以本地预览归档页：
+
+```bash
+python tools/build_index.py site
+```
+
+> GitHub Actions 的 cron 使用 UTC；`0 12 * * *` = 北京时间 20:00。定时任务可能延迟几分钟。
 
 ## 说明与免责
 
@@ -179,11 +217,12 @@ export GITHUB_TOKEN="ghp_你的token"
 
 ## Roadmap
 
-- [ ] GitHub Actions 每日定时运行 + Pages 在线 Demo
-- [ ] 可选 LLM 适配器（OpenAI 兼容，默认关闭，带 `--dry-run`）
-- [ ] 报告归档索引页
-- [ ] 英文摘要 / 英文 README
-- [ ] README 报告截图
+- [x] GitHub Actions 每日定时运行 + Pages 在线 Demo（见「发布到 GitHub Pages」）
+- [x] 可选 LLM 适配器（OpenAI 兼容，默认关闭，带 `--dry-run` 与费用上限）
+- [x] 报告归档索引页（`tools/build_index.py`）
+- [x] 英文摘要（README 顶部）
+- [ ] 完整英文 README
+- [x] README 报告截图（`docs/screenshot.png`）
 
 ## 许可证
 

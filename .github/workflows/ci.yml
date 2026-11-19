@@ -24,7 +24,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Syntax check
-        run: python -m py_compile monitor.py lib/*.py tests/*.py
+        run: python -m py_compile monitor.py enrich.py lib/*.py tests/*.py tools/*.py
 
       - name: Config validation
         run: python -c "from lib.config import load_config; load_config()"

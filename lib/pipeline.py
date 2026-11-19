@@ -63,6 +63,9 @@ PLATFORM_RULES = [
     ("自托管", ("self-hosted", "selfhosted", "docker", "自建")),
 ]
 
+# 查询短语里过于宽泛、不适合作为"必须命中"校验的词
+QUERY_STOPWORDS = {"app", "application", "tool", "tools", "software", "platform"}
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -98,11 +101,34 @@ def _platforms(text: str) -> str:
     return " · ".join(tags) or "—"
 
 
-def build_queries(cfg: dict) -> list[tuple[str, str]]:
-    """生成 (查询式, 领域标签) 列表。
+def _terms_for(phrase: str) -> list[str]:
+    """把配置里的短语拆成"必须命中"的词，去掉 app/tool 这类泛词。"""
+    terms = [t for t in re.split(r"\s+", phrase.lower())
+             if len(t) > 1 and t not in QUERY_STOPWORDS]
+    return terms or [phrase.lower()]
 
-    为节省匿名 API 额度，每个领域每次只用代表词；代表词每天轮换，
-    几天内就能把配置里的关键词都覆盖到。更新通道覆盖全部领域。
+
+def _matches_terms(repo: dict, terms: list[str]) -> bool:
+    """本地校验：名称/描述/topics 必须包含短语里的所有实词。
+
+    例如 "habit tracker" 会排除 habitat（缺少 tracker），但保留真正的习惯追踪器。
+    """
+    if not terms:
+        return True
+    text = " ".join([
+        str(repo.get("name") or ""),
+        str(repo.get("full_name") or ""),
+        str(repo.get("description") or ""),
+        " ".join(str(t) for t in (repo.get("topics") or [])),
+    ]).lower()
+    return all(term in text for term in terms)
+
+
+def build_queries(cfg: dict) -> list[tuple[str, str, list[str]]]:
+    """生成 (查询式, 领域标签, 必须命中词) 列表。
+
+    查询用短语里的核心词保证召回，再用本地 _matches_terms 保证精度；
+    代表词每天轮换，几天内覆盖配置里的全部关键词。
     """
     s = cfg["search"]
     keywords = cfg["keywords"]
@@ -113,17 +139,20 @@ def build_queries(cfg: dict) -> list[tuple[str, str]]:
 
     items = [(cat, words) for cat, words in keywords.items()
              if not cat.startswith("_") and words]
-    queries: list[tuple[str, str]] = []
+    queries: list[tuple[str, str, list[str]]] = []
 
     # 通道一：各领域近期新建项目（代表词轮换）
     for category, words in items:
-        w = words[rotation % len(words)]
-        queries.append((f"{w} created:>{since} stars:>={min_s}", category))
+        phrase = words[rotation % len(words)]
+        terms = _terms_for(phrase)
+        queries.append((f"{terms[0]} created:>{since} stars:>={min_s}", category, terms))
 
-    # 通道二：全部领域的高星项目近期重要更新（换一个词，避免与通道一重复）
+    # 通道二：全部领域的高星项目近期重要更新
     for category, words in items:
         phrase = words[(rotation + 1) % len(words)]
-        queries.append((f"{phrase} stars:>={max(min_s * 8, 500)} pushed:>{pushed}", category))
+        terms = _terms_for(phrase)
+        min_update = max(min_s * 4, 300)
+        queries.append((f"{terms[0]} stars:>={min_update} pushed:>{pushed}", category, terms))
 
     return queries[: s["max_queries_per_run"]]
 

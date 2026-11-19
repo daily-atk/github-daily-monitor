@@ -22,7 +22,7 @@ from lib.config import ConfigError, load_config, root_path
 from lib.github_client import GitHubClient
 from lib.pipeline import (
     build_queries, filter_low_quality, score_repo, dedup_and_select,
-    update_history, normalize_history,
+    update_history, normalize_history, _matches_terms,
 )
 from lib.reporter import build_report_data, save_reports, validate_enriched
 
@@ -108,10 +108,12 @@ def do_collect(cfg: dict, verbose: bool = True, force: bool = False) -> dict:
 
     all_repos: list[dict] = []
     categories: dict[str, str] = {}
-    for i, (q, cat) in enumerate(queries, 1):
+    for i, (q, cat, required) in enumerate(queries, 1):
         if verbose:
             print(f"  ({i}/{len(queries)}) [{cat}] {q[:70]}...")
         items = client.search_repos(q, sort="stars", order="desc", per_page=s["results_per_query"])
+        if required:
+            items = [it for it in items if _matches_terms(it, required)]
         for it in items:
             categories.setdefault(it["full_name"], cat)
         all_repos.extend(items)

@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lib.config import load_config
 from lib.pipeline import (
-    _hits, build_queries, dedup_and_select, filter_low_quality,
+    _hits, _matches_terms, build_queries, dedup_and_select, filter_low_quality,
     normalize_history, score_repo,
 )
 from helpers import history_record, make_repo, make_scored
@@ -35,9 +35,23 @@ class QueryTests(unittest.TestCase):
         self.assertEqual(len(build_queries(CFG)), expected)
 
     def test_every_query_has_known_category(self):
-        for query, category in build_queries(CFG):
+        for query, category, terms in build_queries(CFG):
             self.assertTrue(query)
             self.assertIn(category, CFG["keywords"])
+            self.assertGreaterEqual(len(terms), 1)
+
+    def test_required_terms_skip_generic_words(self):
+        for _, _, terms in build_queries(CFG):
+            self.assertNotIn("app", terms)
+            self.assertNotIn("tool", terms)
+
+    def test_matches_terms_rejects_false_positive(self):
+        tracker = {"name": "streak", "full_name": "InlitX/streak",
+                   "description": "A habit tracker app", "topics": ["habit-tracking"]}
+        habitat = {"name": "habitat", "full_name": "habitat-sh/habitat",
+                   "description": "Build applications", "topics": []}
+        self.assertTrue(_matches_terms(tracker, ["habit", "tracker"]))
+        self.assertFalse(_matches_terms(habitat, ["habit", "tracker"]))
 
 
 class FilterTests(unittest.TestCase):

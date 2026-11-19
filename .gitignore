@@ -14,6 +14,9 @@ data/enriched_latest.json
 reports/*.md
 reports/*.html
 
+# Pages 构建产物
+site/
+
 # 本地自动化运行时目录（含自动化记忆，不应公开）
 .workbuddy/
 
