@@ -1,17 +1,15 @@
 """采集 → 过滤 → 去重 → 普通人价值打分 → 排序 的核心流水线。"""
 from __future__ import annotations
 
-import json
 import re
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from .config import strip_notes
 
 # 面向"普通人"的消费级信号词（命中即加分）
 CONSUMER_WORDS = {
     "app", "application", "tool", "dashboard", "browser", "extension", "desktop",
-    "mobile", "ios", "android", "web", "self-hosted", "selfhosted", "no-code",
+    "mobile", "ios", "android", "web", "website", "self-hosted", "selfhosted", "no-code",
     "one-click", "simple", "easy", "personal", "everyday", "daily", "planner",
     "tracker", "manager", "reminder", "organizer", "应用", "工具", "软件", "插件",
     "简单", "一键", "个人", "日常", "管理", "追踪", "提醒",
@@ -23,17 +21,27 @@ DEVELOPER_WORDS = {
     "open-source alternative to", "programming language", "library for",
 }
 # 上手难度推断：低/中/高
-EASY_WORDS = {"browser extension", "web app", "online", "desktop app", "ios", "android",
-              "chrome extension", "mobile app", "website", "no install", "一键", "网页", "插件"}
-HARD_WORDS = {"self-hosted", "docker", "server", "terminal", "cli", "command line",
-              "kubernetes", "requirements.txt", "自建", "服务器", "命令行", "部署"}
-# 纯开发者基础设施信号：命中即判定为"对普通人无直接价值"，重罚
+EASY_WORDS = {
+    "browser extension", "web app", "online", "desktop app", "ios", "android",
+    "chrome extension", "mobile app", "website", "no install", "一键", "网页", "插件",
+}
+HARD_WORDS = {
+    "self-hosted", "docker", "server", "terminal", "cli", "command line",
+    "kubernetes", "requirements.txt", "自建", "服务器", "命令行", "部署",
+}
+# 纯开发者基础设施信号：出现在项目名/topics 里即重罚
 DEV_INFRA_WORDS = {
     "webkit", "browser engine", "rendering engine", "kernel", "database engine",
-    "media center", "operating system", "linux distribution", "compiler", "runtime",
-    "framework for", "sdk for", "api server", "orm", "query engine", "search engine library",
-    "kubernetes", "container runtime", "package manager", "build system", "monorepo",
-    "paradedb", "postgresql extension", "elasticsearch",
+    "operating system", "linux distribution", "compiler", "runtime",
+    "framework for", "sdk for", "api server", "orm", "query engine",
+    "search engine library", "kubernetes", "container runtime", "package manager",
+    "build system", "monorepo", "paradedb", "postgresql extension", "elasticsearch",
+}
+# 描述里的强开发者信号：只轻罚，避免把 Kodi 这类消费级项目误杀
+DEV_INFRA_DESC_WORDS = {
+    "sdk for", "api server", "framework for", "library for", "query engine",
+    "container runtime", "build system", "monorepo", "postgresql extension",
+    "elasticsearch", "orm", "database engine",
 }
 # 这些 topic 表示是给开发者用的基础设施，而非消费级应用
 DEV_INFRA_TOPICS = {
@@ -47,6 +55,14 @@ CATEGORY_LABEL = {
     "健康": "💪 健康", "财务": "💰 财务", "综合": "🧰 综合",
 }
 
+# 平台推断规则（用于报告里告诉普通人"手机/电脑能不能用"）
+PLATFORM_RULES = [
+    ("手机", ("android", "ios", "iphone", "ipad", "mobile", "手机")),
+    ("网页", ("web app", "browser extension", "chrome extension", "website", "网页")),
+    ("电脑", ("windows", "macos", "linux", "desktop", "桌面")),
+    ("自托管", ("self-hosted", "selfhosted", "docker", "自建")),
+]
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -56,38 +72,66 @@ def _iso(days_ago: int) -> str:
     return (_now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
 
 
-def build_queries(cfg: dict) -> list[tuple[str, str]]:
-    """生成 (查询式, 领域标签) 列表：每个领域一个查询 + 通用捞取。
+def _hits(text: str, words) -> int:
+    """按单词边界统计命中，避免 api 命中 capital、app 命中 apple 这类误判。
 
-    为节省匿名 API 额度，每个领域只用第一个代表词，且放宽为 created/pushed 双通道，
-    真正精细的领域判断交给本地打分逻辑完成。
+    纯英文词用正则边界（允许简单复数 s）；中文词没有空格边界，仍按子串匹配。
+    """
+    low = (text or "").lower()
+    n = 0
+    for w in words:
+        wl = str(w).lower().strip()
+        if not wl:
+            continue
+        if re.search(r"[a-z]", wl):
+            pat = r"(?<![a-z0-9])" + re.escape(wl) + r"(?:s)?(?![a-z0-9])"
+            if re.search(pat, low):
+                n += 1
+        elif wl in low:
+            n += 1
+    return n
+
+
+def _platforms(text: str) -> str:
+    low = (text or "").lower()
+    tags = [label for label, keys in PLATFORM_RULES if any(k in low for k in keys)]
+    return " · ".join(tags) or "—"
+
+
+def build_queries(cfg: dict) -> list[tuple[str, str]]:
+    """生成 (查询式, 领域标签) 列表。
+
+    为节省匿名 API 额度，每个领域每次只用代表词；代表词每天轮换，
+    几天内就能把配置里的关键词都覆盖到。更新通道覆盖全部领域。
     """
     s = cfg["search"]
     keywords = cfg["keywords"]
     since = _iso(s["lookback_days"])
     pushed = _iso(s.get("updated_lookback_days", 3))
     min_s = s["min_stars"]
+    rotation = datetime.now().toordinal()  # 每天 +1，逐日轮换代表词
+
+    items = [(cat, words) for cat, words in keywords.items()
+             if not cat.startswith("_") and words]
     queries: list[tuple[str, str]] = []
-    # 通道一：各领域近期新建项目（用代表词，不加引号，覆盖面更广）
-    for category, words in keywords.items():
-        if category.startswith("_") or not words:
-            continue
-        w = words[0]
-        q = f'{w} created:>{since} stars:>={min_s}'
-        queries.append((q, category))
-    # 通道二：高星项目近期重要更新（捞取"值得关注的老项目新动作"）
-    for category, words in list(keywords.items())[:2]:
-        if category.startswith("_") or not words:
-            continue
-        w = words[0].split()[0]  # 取核心词
-        q = f'{w} stars:>={max(min_s * 8, 500)} pushed:>{pushed}'
-        queries.append((q, category))
+
+    # 通道一：各领域近期新建项目（代表词轮换）
+    for category, words in items:
+        w = words[rotation % len(words)]
+        queries.append((f"{w} created:>{since} stars:>={min_s}", category))
+
+    # 通道二：全部领域的高星项目近期重要更新（换一个词，避免与通道一重复）
+    for category, words in items:
+        phrase = words[(rotation + 1) % len(words)]
+        queries.append((f"{phrase} stars:>={max(min_s * 8, 500)} pushed:>{pushed}", category))
+
     return queries[: s["max_queries_per_run"]]
 
 
 def _contains_any(text: str, words) -> bool:
-    low = text.lower()
-    return any(w.lower() in low for w in words)
+    """排除词用子串匹配（支持 awesome- 这类前缀语义）。"""
+    low = (text or "").lower()
+    return any(str(w).lower() in low for w in words)
 
 
 def filter_low_quality(repos: list[dict], cfg: dict) -> tuple[list[dict], dict]:
@@ -96,7 +140,7 @@ def filter_low_quality(repos: list[dict], cfg: dict) -> tuple[list[dict], dict]:
     excl = strip_notes(cfg["exclude_words"])
     stats = {"total_raw": len(repos), "by_no_desc": 0, "by_short_desc": 0,
              "by_exclude_name": 0, "by_exclude_desc": 0, "by_fork_ratio": 0,
-             "by_archived": 0, "by_stars": 0, "kept": 0}
+             "by_archived": 0, "by_stars": 0, "by_size": 0, "kept": 0}
     kept = []
     seen_name = set()
     for r in repos:
@@ -132,7 +176,7 @@ def filter_low_quality(repos: list[dict], cfg: dict) -> tuple[list[dict], dict]:
             stats["by_fork_ratio"] += 1
             continue
         if r.get("size", 0) and r["size"] < f.get("min_size_kb", 20):
-            stats["by_stars"] += 1
+            stats["by_size"] += 1
             continue
         kept.append(r)
     stats["kept"] = len(kept)
@@ -140,29 +184,38 @@ def filter_low_quality(repos: list[dict], cfg: dict) -> tuple[list[dict], dict]:
 
 
 def score_repo(r: dict, category: str, cfg: dict) -> dict:
-    """给单个仓库打"普通人实用价值"分，并给出难度、领域标签。"""
+    """给单个仓库打"普通人实用价值"分，并给出难度、平台、许可证等字段。"""
     sc = strip_notes(cfg["scoring"])
     name = r.get("full_name", "")
     desc = r.get("description") or ""
-    topics = r.get("topics") or []
-    text = f"{name} {desc} {' '.join(topics)}".lower()
+    topics = [str(t) for t in (r.get("topics") or [])]
+    text = f"{name} {desc} {' '.join(topics)}"
 
-    consumer_hits = sum(1 for w in CONSUMER_WORDS if w in text)
-    dev_hits = sum(1 for w in DEVELOPER_WORDS if w in text)
+    consumer_hits = _hits(text, CONSUMER_WORDS)
+    dev_hits = _hits(text, DEVELOPER_WORDS)
     weight = sc.get("domain_weight", {}).get(category, 1.0)
 
-    # 开发者基础设施检测（命中即视为对普通人无直接价值）
-    infra_name_hit = _contains_any(name.lower(), DEV_INFRA_WORDS)
-    infra_topic_hit = bool(set(t.lower() for t in topics) & DEV_INFRA_TOPICS)
+    # 开发者基础设施检测：项目名/topics 重罚，描述轻罚（防止误杀消费级项目）
+    infra_name_hits = _hits(name, DEV_INFRA_WORDS)
+    infra_desc_hits = _hits(desc, DEV_INFRA_DESC_WORDS)
+    infra_topic_hit = bool({t.lower() for t in topics} & DEV_INFRA_TOPICS)
+
+    lic = r.get("license") or {}
+    spdx = (lic.get("spdx_id") or "") if isinstance(lic, dict) else ""
+    if spdx.upper() in ("NOASSERTION", "NONE"):
+        spdx = ""
 
     score = 40.0
     score += min(consumer_hits, 6) * 3.5          # 消费级信号，最多 +21
     score -= min(dev_hits, 5) * 3.0                # 开发者向，最多 -15
     score += min(len(topics), 6) * 1.2             # 有主题分类，信息更完整
-    if infra_name_hit:
+    if infra_name_hits:
         score -= 30
     if infra_topic_hit:
         score -= 18
+    if infra_desc_hits:
+        score -= min(infra_desc_hits, 2) * 6
+
     stars = r.get("stargazers_count", 0)
     if stars >= 1000:
         score += 8
@@ -172,6 +225,10 @@ def score_repo(r: dict, category: str, cfg: dict) -> dict:
         score += 2
     if r.get("homepage"):
         score += 4
+    if not spdx:
+        # 没有开源许可证，普通人无法判断能否安全使用/商用，扣分
+        score -= 6
+
     # 新鲜度
     created = r.get("created_at", "")
     try:
@@ -183,11 +240,12 @@ def score_repo(r: dict, category: str, cfg: dict) -> dict:
             score += 5
     except Exception:
         pass
-    score *= weight
-    score = round(max(0, min(100, score)), 1)
 
-    easy_hits = sum(1 for w in EASY_WORDS if w in text)
-    hard_hits = sum(1 for w in HARD_WORDS if w in text)
+    score *= weight
+    score = round(max(0.0, min(100.0, score)), 1)
+
+    easy_hits = _hits(text, EASY_WORDS)
+    hard_hits = _hits(text, HARD_WORDS)
     if easy_hits > hard_hits:
         difficulty = "低"
     elif hard_hits > easy_hits + 1:
@@ -205,6 +263,8 @@ def score_repo(r: dict, category: str, cfg: dict) -> dict:
         "stars": stars,
         "forks": r.get("forks_count", 0),
         "language": r.get("language") or "",
+        "license": spdx,
+        "platforms": _platforms(f"{desc} {' '.join(topics)}"),
         "topics": topics[:8],
         "created_at": created,
         "pushed_at": r.get("pushed_at", ""),
@@ -220,26 +280,43 @@ def score_repo(r: dict, category: str, cfg: dict) -> dict:
 
 def dedup_and_select(scored: list[dict], cfg: dict, history: dict
                      ) -> tuple[list[dict], dict]:
-    """去重（历史 + 冷却期）并选出 Top N。"""
+    """去重（推荐冷却 + 近期见过冷却）并按领域配额选出 Top N。"""
     d = strip_notes(cfg["dedup"])
+    sc = strip_notes(cfg["scoring"])
     cooldown = d.get("cooldown_days", 30)
+    seen_cooldown = d.get("seen_cooldown_days", 7)
     records = history.get("records", {})
     now = _now()
-    stats = {"by_history": 0, "in_cooldown": 0, "selected": 0}
+    stats = {"in_cooldown": 0, "recent_seen": 0, "selected": 0}
 
     fresh_pool = []
     for item in scored:
         fn = item["full_name"]
         rec = records.get(fn)
-        if rec:
-            try:
-                last = datetime.fromisoformat(rec["last_recommended"].replace("Z", "+00:00"))
-                if (now - last).days < cooldown:
-                    stats["in_cooldown"] += 1
-                    continue
-            except Exception:
-                stats["by_history"] += 1
-                continue
+        if isinstance(rec, dict):
+            last_rec = rec.get("last_recommended")
+            if last_rec:
+                # 推荐过的项目：完整冷却期
+                try:
+                    last = datetime.fromisoformat(str(last_rec).replace("Z", "+00:00"))
+                    if (now - last).days < cooldown:
+                        stats["in_cooldown"] += 1
+                        continue
+                except Exception:
+                    pass
+            else:
+                # 只是见过、从未推荐：短冷却。旧文件没有 last_seen 时退回 first_seen。
+                last_seen = rec.get("last_seen") or rec.get("first_seen")
+                if last_seen and seen_cooldown > 0:
+                    try:
+                        ls = datetime.fromisoformat(str(last_seen).replace("Z", "+00:00"))
+                        # 同一天见过的不拦截：手动跑过之后，定时任务再跑不应把候选池耗尽
+                        seen_days = (now.date() - ls.date()).days
+                        if 1 <= seen_days < seen_cooldown:
+                            stats["recent_seen"] += 1
+                            continue
+                    except Exception:
+                        pass
         fresh_pool.append(item)
 
     # 同名项目只保留得分最高的一条
@@ -250,29 +327,69 @@ def dedup_and_select(scored: list[dict], cfg: dict, history: dict
             best[fn] = item
 
     ranked = sorted(best.values(), key=lambda x: (-x["score"], -x["stars"]))
-    min_score = cfg["scoring"]["min_score"]
+    min_score = sc.get("min_score", 45)
     ranked = [x for x in ranked if x["score"] >= min_score]
-    top = ranked[: cfg["scoring"]["top_n"]]
+
+    # 领域配额：避免报告被单一领域刷屏
+    max_per_domain = int(sc.get("max_per_domain", 0) or 0)
+    top_n = sc.get("top_n", 10)
+    top: list[dict] = []
+    per_cat: dict[str, int] = {}
+    for item in ranked:
+        cat = item["category"]
+        if max_per_domain and per_cat.get(cat, 0) >= max_per_domain:
+            continue
+        top.append(item)
+        per_cat[cat] = per_cat.get(cat, 0) + 1
+        if len(top) >= top_n:
+            break
+
     stats["selected"] = len(top)
     return top, stats
 
 
 def update_history(history: dict, selected: list[dict], all_seen: list[str]) -> dict:
-    """写回历史：推荐记录 + 所有已见过项目（防止每天重复出现在候选池）。"""
+    """写回历史：推荐记录 + 所有见过项目（只在首次见到时记录，7 天后自动解冻）。"""
     now = _now().isoformat()
+    records = history.setdefault("records", {})
     for item in selected:
         fn = item["full_name"]
-        rec = history["records"].get(fn, {"times_recommended": 0, "first_seen": now})
-        rec["times_recommended"] += 1
+        rec = records.get(fn)
+        if not isinstance(rec, dict):
+            rec = {"times_recommended": 0, "first_seen": now}
+        rec["times_recommended"] = int(rec.get("times_recommended", 0)) + 1
         rec["last_recommended"] = now
+        rec["last_seen"] = now
         rec["last_title"] = item["name"]
         rec["last_score"] = item["score"]
-        history["records"][fn] = rec
+        records[fn] = rec
     for fn in all_seen:
-        if fn not in history["records"]:
-            history["records"][fn] = {
-                "times_recommended": 0, "first_seen": now, "last_recommended": None,
+        if fn not in records:
+            records[fn] = {
+                "times_recommended": 0,
+                "first_seen": now,
+                "last_seen": now,
+                "last_recommended": None,
             }
     history["updated_at"] = now
-    history["total_tracked"] = len(history["records"])
+    history["total_tracked"] = len(records)
     return history
+
+
+def normalize_history(history: dict) -> bool:
+    """兼容旧版历史文件：给缺 last_seen 的记录补一个，避免被误判成永久冷却。
+
+    返回是否发生了修改。
+    """
+    changed = False
+    records = history.get("records")
+    if not isinstance(records, dict):
+        history["records"] = {}
+        return True
+    for rec in records.values():
+        if not isinstance(rec, dict):
+            continue
+        if "last_seen" not in rec:
+            rec["last_seen"] = rec.get("last_recommended") or rec.get("first_seen")
+            changed = True
+    return changed

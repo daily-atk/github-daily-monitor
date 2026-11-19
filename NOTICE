@@ -1,0 +1,19 @@
+# 每日 GitHub 监测助手
+
+Copyright (c) 2026
+
+## 代码许可
+
+MIT License，详见 [LICENSE](LICENSE)。
+
+## 报告内容许可
+
+`reports/` 下自动生成的 Markdown / HTML 报告内容，建议以
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 许可共享。
+
+## 第三方内容
+
+报告中引用的项目名称、描述、星标、许可证等信息来自 GitHub 公开 API，
+版权归对应作者 / 项目所有。本项目仅做聚合与摘要，不主张对这些内容的版权。
+
+本项目与 GitHub 无隶属关系（Not affiliated with GitHub），不使用 GitHub Logo。

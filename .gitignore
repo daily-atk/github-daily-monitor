@@ -6,12 +6,16 @@ __pycache__/
 # 运行时数据（每日自动生成，不应入库）
 data/cache/
 data/history.json
+data/history.backup-*.json
 data/candidates_latest.json
 data/enriched_latest.json
 
 # 每日报告为运行产物，默认不入库
 reports/*.md
 reports/*.html
+
+# 本地自动化运行时目录（含自动化记忆，不应公开）
+.workbuddy/
 
 # 本地环境
 .env

@@ -9,7 +9,7 @@
   },
 
   "search": {
-    "_comment": "lookback_days=只找最近N天新建的项目(建议30天,7天太窄)；min_stars=最低星标(新项目建议50)；updated_lookback_days=捞取近期有重要更新的老项目；request_delay_seconds=API请求间隔(匿名限流10次/分钟,请勿低于7)",
+    "_comment": "lookback_days=只找最近N天新建的项目(建议30天,7天太窄)；min_stars=最低星标(新项目建议50)；updated_lookback_days=捞取近期有重要更新的老项目；request_delay_seconds=API请求间隔(匿名限流10次/分钟,请勿低于7)；max_queries_per_run=每次最多发几个搜索式(每个领域2个:新建+更新)",
     "lookback_days": 30,
     "updated_lookback_days": 3,
     "min_stars": 50,
@@ -17,10 +17,10 @@
     "results_per_query": 60,
     "sort_by": ["stars", "updated"],
     "request_delay_seconds": 7,
-    "max_queries_per_run": 9
+    "max_queries_per_run": 12
   },
 
-  "_keyword_guide": "以下关键词按领域分组，每组会组合成 GitHub 搜索式。可自由增删词条或整个领域。建议用英文（GitHub 描述多为英文）。",
+  "_keyword_guide": "以下关键词按领域分组，每组会组合成 GitHub 搜索式。可自由增删词条或整个领域。建议用英文（GitHub 描述多为英文）。程序每天轮换使用每组里的词，几天内覆盖全部，不会只用到第一个。",
   "keywords": {
     "学习": ["education app", "learning tool", "flashcard", "spaced repetition", "study planner", "note taking app", "reading app", "language learning app"],
     "生活": ["home automation app", "recipe app", "meal planner", "grocery list app", "habit tracker", "life organizer", "travel planner app", "plant care app"],
@@ -33,7 +33,7 @@
 
   "exclude_words": {
     "_comment": "name=项目名命中就排除(不区分大小写，子串匹配)；description=描述命中扣分；支持中英文",
-    "name": ["awesome-", "awesome ", "list-of", "collection-of", "tutorial", "course", "interview", "leetcode", "roadmap", "cheat-sheet", "资源汇总", "学习路线", "面试", "教程", "导航", "curated", "bookmarks", "starter-kit", "boilerplate"],
+    "name": ["awesome-", "awesome ", "list-of", "collection-of", "tutorial", "course", "interview", "leetcode", "roadmap", "cheat-sheet", "资源汇总", "学习路线", "面试", "教程", "导航", "curated", "bookmarks", "starter-kit", "boilerplate", "sdk", "library", "framework", "dotnet"],
     "description": ["Just for fun", "study project", "learning project", "demo project", "练习项目", "课程作业", "毕业设计", "仅供学习"],
     "topics": ["awesome-list", "tutorial", "interview-preparation", "leetcode"]
   },
@@ -49,16 +49,18 @@
   },
 
   "scoring": {
-    "_comment": "top_n=每天最多推荐几个；min_score=低于此分不进报告；domain_weight=领域优先级(普通人视角：健康财务效率略高)",
+    "_comment": "top_n=每天最多推荐几个；min_score=低于此分不进报告；max_per_domain=每个领域最多几个(防止单一领域刷屏，0=不限)；domain_weight=领域优先级(普通人视角：健康财务效率略高)",
     "top_n": 10,
     "min_score": 45,
+    "max_per_domain": 3,
     "domain_weight": { "财务": 1.2, "健康": 1.15, "效率": 1.1, "生活": 1.05, "学习": 1.0 },
     "fresh_bonus_days": 7
   },
 
   "dedup": {
-    "_comment": "cooldown_days=同一项目多少天内不重复推荐；persist_since_first_seen=首次见到即记入历史,防止每天重复出现在候选池",
+    "_comment": "cooldown_days=推荐过的项目多少天内不重复推荐；seen_cooldown_days=只是见过但没入选的项目，多少天内不再考虑(0=不限制)；persist_since_first_seen=首次见到即记入历史,防止每天重复出现在候选池",
     "cooldown_days": 30,
+    "seen_cooldown_days": 7,
     "persist_since_first_seen": true,
     "history_file": "data/history.json"
   },

@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-19",
+  "_comment": "AI 增强数据格式示例（虚拟项目名）。实际运行时由 AI 按 AI_WORKFLOW.md 生成 data/enriched_latest.json；没有该文件时脚本会自动使用兜底文案。",
+  "items": [
+    {
+      "full_name": "example/project-a",
+      "features": "一句话说明这个项目具体做什么。",
+      "audience": "具体到场景的适合人群，例如：经常忘记喝水、想要温和提醒的上班族。",
+      "value": "对普通人省了什么事、改善了什么，尽量具体。",
+      "difficulty": "低",
+      "notes": "许可证、维护状态、隐私或是否付费等真实提醒。"
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 
 ### 1. 采集
 ```bash
-cd "D:/WorkBuddy产出/github-daily-monitor"
+# 在项目根目录执行
 python monitor.py collect
 ```
 这会写 `data/candidates_latest.json`，里面是脚本机械初筛后的候选（已过滤低质量、已按 30 天冷却期去重）。
@@ -48,6 +48,15 @@ python monitor.py collect
 }
 ```
 注意 `full_name` 必须与候选里的一致，用于对应。`items` 的顺序就是最终推荐顺序。
+
+### 2.5 校验增强数据
+
+```bash
+python monitor.py validate
+```
+
+若提示字段缺失、项目不在候选内或日期不一致，请修正 `data/enriched_latest.json` 后重新校验。
+缺少增强项不会阻断报告，但对应项目会使用脚本兜底文案。
 
 ### 3. 生成报告
 ```bash

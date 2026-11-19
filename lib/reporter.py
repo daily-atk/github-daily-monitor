@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import html
 import json
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import strip_notes
@@ -11,24 +12,132 @@ from .config import strip_notes
 DIFFICULTY_LABEL = {"低": "🟢 低（开箱即用）", "中": "🟡 中（需简单配置）", "高": "🔴 高（需技术背景）"}
 DIFFICULTY_CLASS = {"低": "easy", "中": "medium", "高": "hard"}
 
+# 这些仓库名太泛，单独显示会让普通人看不懂，改用 owner/name
+GENERIC_REPO_NAMES = {
+    "android", "ios", "app", "apps", "web", "core", "server", "client", "frontend",
+    "backend", "desktop", "mobile", "cli", "main", "home", "docs", "website", "api",
+    "tool", "tools", "platform", "dashboard", "extension",
+}
+
+REQUIRED_ENRICH_FIELDS = ("features", "audience", "value", "difficulty", "notes")
+
+
+def _first_sentence(text: str, limit: int = 140) -> str:
+    t = (text or "").strip()
+    if not t:
+        return ""
+    parts = re.split(r"(?<=[。！？!?])|(?<=\.)\s+", t, maxsplit=1)
+    s = parts[0].strip() if parts else t
+    if len(s) <= limit:
+        return s
+    # 截断时尽量落在标点或空格处，避免出现 "designed f…" 这种半截单词
+    cut = s[:limit]
+    for sep in ("。", "！", "？", "；", "，", "、", ",", ";"):
+        idx = cut.rfind(sep)
+        if idx > limit * 0.6:
+            return cut[:idx].rstrip() + "…"
+    idx = cut.rfind(" ")
+    if idx > limit * 0.6:
+        cut = cut[:idx]
+    return cut.rstrip() + "…"
+
+
+def _product_from_description(desc: str) -> str:
+    """从 "Super Productivity is an ..." / "Kodi is ..." 这类描述里提取产品名。"""
+    m = re.match(
+        r"^([A-Z][\w.+-]*(?:\s+[A-Z][\w.+-]*){0,2})\s+(?:is|—|-)\s",
+        (desc or "").strip(),
+    )
+    return m.group(1) if m else ""
+
+
+def display_name(item: dict) -> str:
+    """给报告用的标题：优先产品名；仓库名太泛时用 owner/name。"""
+    name = (item.get("name") or "").strip()
+    full = item.get("full_name") or name
+    desc = item.get("description") or ""
+    if not name:
+        return full
+    owner = str(item.get("owner") or "").lower()
+    if name.lower() in GENERIC_REPO_NAMES:
+        return _product_from_description(desc) or full
+    if owner and name.lower() == owner:
+        return _product_from_description(desc) or name
+    return name
+
+
+def _safe_url(url: str) -> str:
+    u = (url or "").strip()
+    return u if u.lower().startswith(("http://", "https://")) else ""
+
+
+def _date(iso: str) -> str:
+    return (iso or "")[:10] or "—"
+
 
 def _default_enrich(item: dict) -> dict:
-    """AI 未增强时的规则版兜底文案。"""
+    """AI 未增强时的规则版兜底文案：尽量按项目特征差异化，避免复读机。"""
     cat = item["category"]
+    desc = (item.get("description") or "").strip()
+    topics = [str(t) for t in (item.get("topics") or [])]
+    low = f"{desc} {' '.join(topics)}".lower()
+
+    base_audience = {
+        "学习": "想提升学习效率、管理知识和笔记的普通人",
+        "生活": "希望用工具打理日常事务、家居与个人生活的用户",
+        "效率": "被任务、时间与注意力困扰，想要更自律的人",
+        "健康": "关注健身、睡眠、饮食与生活习惯的用户",
+        "财务": "想搞清收支、做预算与储蓄规划的普通人",
+        "综合": "希望改善日常效率与生活品质的用户",
+    }.get(cat, "普通用户")
+
+    hints: list[str] = []
+    if any(k in low for k in ("android", "ios", "iphone", "ipad", "mobile")):
+        hints.append("想直接在手机上使用的人")
+    if any(k in low for k in ("self-hosted", "selfhosted", "docker", "server")):
+        hints.append("愿意自己搭服务的技术折腾者")
+    if any(k in low for k in ("classroom", "education", "course", "student", "学习", "课程")):
+        hints.append("学生、老师或培训组织者")
+    if any(k in low for k in ("budget", "expense", "finance", "invoice", "记账", "预算")):
+        hints.append("想管好收支和预算的人")
+    if any(k in low for k in ("fitness", "workout", "sleep", "health", "meditation", "健康", "健身")):
+        hints.append("关注健康习惯的人")
+    audience = "；".join(hints[:2]) or base_audience
+
+    topic_text = "、".join(topics[:2]) if topics else ""
+    cat_value = {
+        "财务": "把收支、预算和资产集中到一处查看，少维护几张表格。",
+        "健康": "把运动、睡眠或习惯记录下来，看到趋势更容易坚持。",
+        "效率": "把待办、专注计时和复盘放在一起，减少来回切换。",
+        "生活": "把日常琐事集中管理，少装几个零散工具。",
+        "学习": "把学习计划、笔记和复习串起来，减少临时抱佛脚。",
+        "综合": "把原本零散、重复的操作收拢成一套现成流程，省时间也少踩坑。",
+    }.get(cat, "围绕真实日常需求，用现成工具减少重复劳动。")
+    value = cat_value + (f"主要围绕「{topic_text}」。" if topic_text else "")
+
+    notes_parts: list[str] = []
+    pushed = item.get("pushed_at") or ""
+    if pushed:
+        try:
+            pd = datetime.fromisoformat(pushed.replace("Z", "+00:00"))
+            days = (datetime.now(timezone.utc) - pd).days
+            if days <= 30:
+                notes_parts.append("近期仍在活跃更新")
+            else:
+                notes_parts.append(f"最近一次更新在 {days} 天前，使用前先确认维护状态")
+        except Exception:
+            pass
+    if not item.get("license"):
+        notes_parts.append("未标注开源许可证，商用前请自行确认")
+    notes_parts.append("建议先读 README 和最新 Issue")
+
     return {
         "full_name": item["full_name"],
-        "features": item["description"],
-        "audience": {
-            "学习": "想提升学习效率、管理知识和笔记的普通人",
-            "生活": "希望用工具打理日常事务、家居与个人生活的用户",
-            "效率": "被任务、时间与注意力困扰，想要更自律的人",
-            "健康": "关注健身、睡眠、饮食与生活习惯的用户",
-            "财务": "想搞清收支、做预算与储蓄规划的普通人",
-            "综合": "希望改善日常效率与生活品质的用户",
-        }.get(cat, "普通用户"),
-        "value": "围绕真实日常需求，用现成工具减少重复劳动、节省时间或改善习惯。",
+        "features": _first_sentence(desc) or desc,
+        "audience": audience,
+        "value": value,
         "difficulty": item["difficulty"],
-        "notes": "上手前先查看项目 README 与最新 Issue，确认维护状态；自托管类需准备相应环境。",
+        "notes": "；".join(notes_parts),
     }
 
 
@@ -45,6 +154,54 @@ def load_enriched(path: Path, expect_date: str | None = None) -> dict:
         return {}
 
 
+def validate_enriched(path: Path, expect_date: str | None,
+                      candidate_names: set[str]) -> list[str]:
+    """校验 AI 增强结果；返回中文问题列表（空列表表示通过或文件不存在）。"""
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [f"enriched 文件无法解析：{e}"]
+    if not isinstance(data, dict):
+        return ["enriched 文件最外层必须是 { ... }"]
+
+    issues: list[str] = []
+    if expect_date and data.get("date") != expect_date:
+        issues.append(f"enriched 日期是 {data.get('date')}，与候选日期 {expect_date} 不一致（会被忽略）")
+
+    items = data.get("items")
+    if not isinstance(items, list) or not items:
+        issues.append("enriched 里没有 items 列表或为空")
+        return issues
+
+    seen: set[str] = set()
+    for idx, x in enumerate(items, 1):
+        if not isinstance(x, dict):
+            issues.append(f"第 {idx} 项不是对象")
+            continue
+        fn = x.get("full_name")
+        if not fn:
+            issues.append(f"第 {idx} 项缺少 full_name")
+            continue
+        if fn in seen:
+            issues.append(f"{fn} 重复出现")
+        seen.add(fn)
+        if candidate_names and fn not in candidate_names:
+            issues.append(f"{fn} 不在当日候选中")
+        for k in REQUIRED_ENRICH_FIELDS:
+            if not str(x.get(k) or "").strip():
+                issues.append(f"{fn} 缺少字段 {k}")
+        if x.get("difficulty") and x.get("difficulty") not in ("低", "中", "高"):
+            issues.append(f"{fn} 的 difficulty 只能是 低/中/高")
+
+    missing = candidate_names - seen
+    if missing:
+        issues.append(f"有 {len(missing)} 个候选未做 AI 增强，将使用脚本兜底文案"
+                      f"（例如 {', '.join(sorted(missing)[:3])}）")
+    return issues
+
+
 def build_report_data(candidates: list[dict], cfg: dict, date_str: str,
                       enriched_path: Path | None = None) -> dict:
     enriched = load_enriched(enriched_path, expect_date=date_str) if enriched_path else {}
@@ -52,14 +209,16 @@ def build_report_data(candidates: list[dict], cfg: dict, date_str: str,
     items = []
 
     def make_item(item: dict, e: dict, rank: int) -> dict:
+        fallback = _default_enrich(item)
         return {
             "rank": rank,
             **item,
-            "features": e.get("features") or item["description"],
-            "audience": e.get("audience") or _default_enrich(item)["audience"],
-            "value": e.get("value") or _default_enrich(item)["value"],
+            "display_name": display_name(item),
+            "features": e.get("features") or fallback["features"],
+            "audience": e.get("audience") or fallback["audience"],
+            "value": e.get("value") or fallback["value"],
             "difficulty": e.get("difficulty") or item["difficulty"],
-            "notes": e.get("notes") or _default_enrich(item)["notes"],
+            "notes": e.get("notes") or fallback["notes"],
         }
 
     # 若存在 AI 增强数据：只保留增强里列出的项目，顺序即最终优先级（AI 语义终筛权威）
@@ -71,12 +230,14 @@ def build_report_data(candidates: list[dict], cfg: dict, date_str: str,
         for c in candidates:
             items.append(make_item(c, {}, len(items) + 1))
 
+    cooldown = strip_notes(cfg.get("dedup", {})).get("cooldown_days", 30)
     return {"date": date_str, "generated_at": datetime.now().isoformat(timespec="seconds"),
-            "count": len(items), "items": items}
+            "count": len(items), "cooldown_days": cooldown, "items": items}
 
 
 def render_markdown(data: dict) -> str:
     d = data["date"]
+    cooldown = data.get("cooldown_days", 30)
     lines = [
         f"# 🛰️ 每日 GitHub 实用项目速递 · {d}",
         "",
@@ -94,14 +255,17 @@ def render_markdown(data: dict) -> str:
         )
     lines += ["", "---", ""]
     for it in data["items"]:
+        title = it.get("display_name") or it["name"]
         lines += [
-            f"## {it['rank']}. [{it['full_name']}]({it['url']}) — {it['category_label']}",
+            f"## {it['rank']}. [{title}]({it['url']}) — {it['category_label']}",
             "",
             f"- 🔗 链接：{it['url']}" + (f" ｜ 官网：{it['homepage']}" if it.get("homepage") else ""),
             f"- 🛠️ 主要功能：{it['features']}",
             f"- 👥 适合人群：{it['audience']}",
             f"- 💡 实用价值：{it['value']}",
             f"- 🎯 上手难度：{DIFFICULTY_LABEL.get(it['difficulty'], it['difficulty'])}",
+            f"- 📦 平台：{it.get('platforms') or '—'} ｜ 🕒 最近更新：{_date(it.get('pushed_at'))} "
+            f"｜ 📄 许可证：{it.get('license') or '未标注'}",
             f"- ⚠️ 注意事项：{it['notes']}",
             f"- 📊 数据：⭐ {it['stars']:,} ｜ 🍴 {it['forks']:,} ｜ 语言 {it['language'] or '—'} ｜ 推荐分 {it['score']}",
             "",
@@ -109,7 +273,7 @@ def render_markdown(data: dict) -> str:
     lines += [
         "---",
         "",
-        "*本报告由「每日 GitHub 监测助手」自动生成并去重，同一项目 30 天内不重复推荐。*",
+        f"*本报告由「每日 GitHub 监测助手」自动生成并去重，同一项目 {cooldown} 天内不重复推荐。*",
         "*星标与维护状态会变化，使用前请以项目页面为准。*",
     ]
     return "\n".join(lines)
@@ -117,27 +281,33 @@ def render_markdown(data: dict) -> str:
 
 def render_html(data: dict) -> str:
     d = data["date"]
+    cooldown = data.get("cooldown_days", 30)
     cards = []
     for it in data["items"]:
         diff = it["difficulty"]
+        title = it.get("display_name") or it["name"]
+        homepage_url = _safe_url(it.get("homepage") or "")
         homepage = (
-            f'<a class="home" href="{html.escape(it["homepage"])}" target="_blank" rel="noopener">官网 ↗</a>'
-            if it.get("homepage") else ""
+            f'<a class="home" href="{html.escape(homepage_url)}" target="_blank" rel="noopener">官网 ↗</a>'
+            if homepage_url else ""
         )
         topics = "".join(f'<span class="tag">#{html.escape(t)}</span>' for t in it.get("topics", [])[:5])
+        update_license = f"{_date(it.get('pushed_at'))} · {html.escape(it.get('license') or '未标注')}"
         cards.append(f"""
-        <article class="card">
+        <article class="card" id="{it['rank']}">
           <div class="card-top">
             <span class="rank">#{it['rank']}</span>
             <span class="cat">{html.escape(it['category_label'])}</span>
             <span class="diff {DIFFICULTY_CLASS.get(diff,'medium')}">{DIFFICULTY_LABEL.get(diff,diff)}</span>
           </div>
-          <h2><a href="{html.escape(it['url'])}" target="_blank" rel="noopener">{html.escape(it['name'])}</a></h2>
+          <h2><a href="{html.escape(it['url'])}" target="_blank" rel="noopener">{html.escape(title)}</a></h2>
           <div class="repo">{html.escape(it['full_name'])}</div>
           <p class="features">{html.escape(it['features'])}</p>
           <div class="grid">
             <div class="cell"><span class="k">👥 适合人群</span><span class="v">{html.escape(it['audience'])}</span></div>
             <div class="cell"><span class="k">💡 实用价值</span><span class="v">{html.escape(it['value'])}</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">{html.escape(it.get('platforms') or '—')}</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">{update_license}</span></div>
             <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">{html.escape(it['notes'])}</span></div>
           </div>
           <div class="tags">{topics}</div>
@@ -148,7 +318,7 @@ def render_html(data: dict) -> str:
         </article>""")
 
     rows = "".join(
-        f"<tr><td>{it['rank']}</td><td><a href='#{it['rank']}'>{html.escape(it['name'])}</a></td>"
+        f"<tr><td>{it['rank']}</td><td><a href='#{it['rank']}'>{html.escape(it.get('display_name') or it['name'])}</a></td>"
         f"<td>{html.escape(it['category_label'])}</td><td>{it['score']}</td></tr>"
         for it in data["items"]
     )
@@ -190,7 +360,7 @@ footer{{text-align:center;color:var(--mut);font-size:12px;margin-top:36px}}
 <div class="summary">今日从 GitHub 筛选出 <b>{data['count']}</b> 个对普通人真正有用的项目，按推荐优先级排序。<br>只看「能不能帮到学习 / 生活 / 效率 / 健康 / 财务」，不堆开发者玩具。</div>
 <table><thead><tr><th>#</th><th>项目</th><th>领域</th><th>推荐分</th></tr></thead><tbody>{rows}</tbody></table>
 {''.join(cards)}
-<footer>本报告由「每日 GitHub 监测助手」自动生成并去重 · 同一项目 30 天内不重复推荐<br>星标与维护状态会变化，使用前请以项目页面为准</footer>
+<footer>本报告由「每日 GitHub 监测助手」自动生成并去重 · 同一项目 {cooldown} 天内不重复推荐<br>星标与维护状态会变化，使用前请以项目页面为准</footer>
 </div></body></html>"""
 
 
