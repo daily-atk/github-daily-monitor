@@ -6,6 +6,8 @@ Topics：github, daily-digest, chinese, python, automation, self-hosted, github-
 
 # 每日 GitHub 监测助手
 
+[English](README.en.md) ｜ **中文**
+
 每天自动从 GitHub 捞出「对普通人真正有用」的新项目 / 有重要更新的项目，筛选后生成一份简洁总结（Markdown + HTML），按推荐优先级排序。**同一项目 30 天内不重复推荐。**
 
 > **English**: A zero-dependency Python tool that turns GitHub into a daily Chinese digest for non-technical people — with 30-day dedup, domain quotas, and optional AI summaries. It outputs Markdown + HTML and can be published as a static site via GitHub Actions + Pages. MIT licensed; not affiliated with GitHub.
@@ -81,7 +83,9 @@ python enrich.py --enable --max-cost 0.05
 | `lib/` | 采集、过滤、打分、报告生成模块 |
 | `tools/build_index.py` | 生成历史归档索引页 |
 | `AI_WORKFLOW.md` | 每日自动化 AI 的执行说明（作业指导书） |
+| `README.en.md` | 英文说明 |
 | `新手使用说明.md` | 面向零基础用户的步骤说明 |
+| `docs/launch/` | V2EX / 少数派 / Reddit 发布文案 |
 | `运行日报.bat` | Windows 双击运行一次完整流程 |
 | `run.sh` | macOS / Linux 一键运行 |
 | `打开今日报告.bat` | 双击打开最新报告 |
@@ -221,7 +225,7 @@ python tools/build_index.py site
 - [x] 可选 LLM 适配器（OpenAI 兼容，默认关闭，带 `--dry-run` 与费用上限）
 - [x] 报告归档索引页（`tools/build_index.py`）
 - [x] 英文摘要（README 顶部）
-- [ ] 完整英文 README
+- [x] 完整英文 README（`README.en.md`）
 - [x] README 报告截图（`docs/screenshot.png`）
 
 ## 许可证
