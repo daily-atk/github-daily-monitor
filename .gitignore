@@ -1,0 +1,20 @@
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 运行时数据（每日自动生成，不应入库）
+data/cache/
+data/history.json
+data/candidates_latest.json
+data/enriched_latest.json
+
+# 每日报告为运行产物，默认不入库
+reports/*.md
+reports/*.html
+
+# 本地环境
+.env
+*.log
+.DS_Store
+Thumbs.db

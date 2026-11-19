@@ -1,0 +1,76 @@
+{
+  "_notes": "这是生效配置。所有以 _ 开头的键只是说明，程序会忽略。修改后无需重启，下次运行自动读取。",
+  "version": 1,
+
+  "schedule": {
+    "_comment": "每日总结时间由定时自动化按 20:00 触发；这里的时间用于报告标题和展示，改动时间请同时更新自动化任务",
+    "summary_time": "20:00",
+    "timezone": "Asia/Shanghai"
+  },
+
+  "search": {
+    "_comment": "lookback_days=只找最近N天新建的项目(建议30天,7天太窄)；min_stars=最低星标(新项目建议50)；updated_lookback_days=捞取近期有重要更新的老项目；request_delay_seconds=API请求间隔(匿名限流10次/分钟,请勿低于7)",
+    "lookback_days": 30,
+    "updated_lookback_days": 3,
+    "min_stars": 50,
+    "max_stars": 80000,
+    "results_per_query": 60,
+    "sort_by": ["stars", "updated"],
+    "request_delay_seconds": 7,
+    "max_queries_per_run": 9
+  },
+
+  "_keyword_guide": "以下关键词按领域分组，每组会组合成 GitHub 搜索式。可自由增删词条或整个领域。建议用英文（GitHub 描述多为英文）。",
+  "keywords": {
+    "学习": ["education app", "learning tool", "flashcard", "spaced repetition", "study planner", "note taking app", "reading app", "language learning app"],
+    "生活": ["home automation app", "recipe app", "meal planner", "grocery list app", "habit tracker", "life organizer", "travel planner app", "plant care app"],
+    "效率": ["productivity app", "todo app", "task manager", "focus timer", "pomodoro app", "time tracker app", "daily planner app", "automation tool no-code"],
+    "健康": ["fitness app", "workout tracker", "sleep tracker", "meditation app", "calorie counter", "nutrition tracker", "water reminder app", "health dashboard self-hosted"],
+    "财务": ["personal finance app", "budget app", "expense tracker", "money manager", "investment tracker", "self-hosted finance", "invoice app", "savings tracker"]
+  },
+
+  "extra_queries": ["useful tool for everyday life", "open source alternative app"],
+
+  "exclude_words": {
+    "_comment": "name=项目名命中就排除(不区分大小写，子串匹配)；description=描述命中扣分；支持中英文",
+    "name": ["awesome-", "awesome ", "list-of", "collection-of", "tutorial", "course", "interview", "leetcode", "roadmap", "cheat-sheet", "资源汇总", "学习路线", "面试", "教程", "导航", "curated", "bookmarks", "starter-kit", "boilerplate"],
+    "description": ["Just for fun", "study project", "learning project", "demo project", "练习项目", "课程作业", "毕业设计", "仅供学习"],
+    "topics": ["awesome-list", "tutorial", "interview-preparation", "leetcode"]
+  },
+
+  "filters": {
+    "_comment": "require_description=无描述直接丢弃；max_fork_ratio=fork/star 比例过高疑似搬运；min_description_length=描述太短信息量不足；exclude_archived=排除归档项目；blocked_languages=这些语言主导的项目多为开发者向，默认不单独排除但会扣分",
+    "require_description": true,
+    "min_description_length": 25,
+    "max_fork_ratio": 0.85,
+    "exclude_archived": true,
+    "exclude_disabled": true,
+    "min_size_kb": 20
+  },
+
+  "scoring": {
+    "_comment": "top_n=每天最多推荐几个；min_score=低于此分不进报告；domain_weight=领域优先级(普通人视角：健康财务效率略高)",
+    "top_n": 10,
+    "min_score": 45,
+    "domain_weight": { "财务": 1.2, "健康": 1.15, "效率": 1.1, "生活": 1.05, "学习": 1.0 },
+    "fresh_bonus_days": 7
+  },
+
+  "dedup": {
+    "_comment": "cooldown_days=同一项目多少天内不重复推荐；persist_since_first_seen=首次见到即记入历史,防止每天重复出现在候选池",
+    "cooldown_days": 30,
+    "persist_since_first_seen": true,
+    "history_file": "data/history.json"
+  },
+
+  "output": {
+    "_comment": "formats 支持 md 和 html；candidates_file=供AI增强阅读的结构化候选数据；reports_dir=报告输出目录",
+    "formats": ["md", "html"],
+    "reports_dir": "reports",
+    "candidates_file": "data/candidates_latest.json",
+    "enriched_file": "data/enriched_latest.json",
+    "keep_reports_days": 90
+  },
+
+  "github_token_env": "GITHUB_TOKEN"
+}
