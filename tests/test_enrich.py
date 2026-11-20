@@ -9,7 +9,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from enrich import build_prompt, estimate_cost, estimate_tokens, parse_items
+from enrich import (
+    SYSTEM_PROMPTS, build_prompt, estimate_cost, estimate_tokens, parse_items,
+)
 from helpers import make_scored
 
 
@@ -29,6 +31,18 @@ class PromptTests(unittest.TestCase):
         self.assertEqual(estimate_tokens("a" * 4000), 1000)
         cost = estimate_cost("a" * 4000, 1000, 1.0, 2.0)
         self.assertAlmostEqual(cost, 0.003, places=6)
+
+    def test_dev_prompt_contains_growth_and_developer_context(self):
+        candidate = make_scored("ok/dev", description="A framework for agents",
+                                topics=["framework"])
+        candidate["stars_growth"] = 1234
+        candidate["growth_period"] = "daily"
+        prompt = build_prompt([candidate], profile="dev")
+        self.assertIn("stars_growth", prompt)
+        self.assertIn("1234", prompt)
+        self.assertIn("开发者", prompt)
+        self.assertIn("Trending", prompt)
+        self.assertNotEqual(SYSTEM_PROMPTS["consumer"], SYSTEM_PROMPTS["dev"])
 
 
 class ParseTests(unittest.TestCase):

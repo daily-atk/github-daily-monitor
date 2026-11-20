@@ -70,6 +70,7 @@ python monitor.py stats          # dedup history stats
 python monitor.py validate       # check optional AI-enriched data
 python enrich.py --dry-run       # preview the AI prompt and estimated cost
 python enrich.py --enable        # call the configured LLM (optional)
+python enrich.py --profile dev --enable   # developer-ranking copy (optional)
 python tools/build_index.py site # build the archive index page
 python -m unittest discover -s tests -v
 ```
@@ -135,13 +136,14 @@ export LLM_MODEL="deepseek-chat"
 export LLM_BASE_URL="https://api.deepseek.com/v1"   # any OpenAI-compatible endpoint
 python enrich.py --dry-run
 python enrich.py --enable --max-cost 0.05
+python enrich.py --profile dev --enable --max-cost 0.05   # developer ranking
 ```
 
 Cost control:
 
 - `--max-cost` is in USD and requires `LLM_PRICE_INPUT_PER_1M` / `LLM_PRICE_OUTPUT_PER_1M`.
 - Token counts are estimated at roughly 4 characters per token; this is a guardrail, not a billing statement.
-- The adapter only writes `data/enriched_latest.json`; it never installs or executes recommended projects.
+- The consumer adapter writes `data/enriched_latest.json`; `--profile dev` writes `data-dev/enriched_latest.json`. It never installs or executes recommended projects.
 
 ## Publish to GitHub Pages
 

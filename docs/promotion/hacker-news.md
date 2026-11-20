@@ -33,7 +33,7 @@ How it works:
 - Optional OpenAI-compatible enrichment, off by default, with --dry-run and a cost cap
 - GitHub Actions + Pages for daily publishing
 
-Zero dependencies (Python stdlib), 52 tests, MIT.
+Zero dependencies (Python stdlib), 56 tests, MIT.
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 Demo: https://daily-atk.github.io/github-daily-monitor/

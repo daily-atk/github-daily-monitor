@@ -33,7 +33,7 @@ if str(ROOT) not in sys.path:
 from lib.config import load_config  # noqa: E402
 from lib.reporter import build_report_data  # noqa: E402
 
-DEFAULT_DATABASE_ID = "xX25PIiOQbZsat3exiY0oT"
+DEFAULT_DATABASE_ID = os.environ.get("WORKBUDDY_LIBRARY_DATABASE_ID", "").strip()
 OUT_FILE = ROOT / "data" / "top3_for_library.json"
 
 BOARD_CONSUMER = "普通人版"
@@ -238,12 +238,14 @@ def existing_rows(db_dir: str, database_id: str) -> dict[tuple[str, str, int], d
 
 def main() -> None:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--database-id", default=DEFAULT_DATABASE_ID)
+    parser.add_argument("--database-id", default=DEFAULT_DATABASE_ID,
+                        help="资料库 database_id；也可用环境变量 WORKBUDDY_LIBRARY_DATABASE_ID")
     parser.add_argument("--library-dir", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force-update", action="store_true",
                         help="项目相同也强制用最新数据覆盖（用于回填新增字段）")
     args, _ = parser.parse_known_args()
+    db_id = (args.database_id or "").strip()
 
     consumer_date, consumer_items = load_board("consumer")
     dev_date, dev_items = load_board("dev")
@@ -256,7 +258,7 @@ def main() -> None:
 
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUT_FILE.write_text(
-        json.dumps({"database_id": args.database_id, "boards": [
+        json.dumps({"database_id": db_id, "boards": [
             {"board": BOARD_CONSUMER, "date": consumer_date, "count": len(consumer_items)},
             {"board": BOARD_DEV, "date": dev_date, "count": len(dev_items)},
         ], "records": records}, ensure_ascii=False, indent=2),
@@ -270,12 +272,19 @@ def main() -> None:
         "out_file": str(OUT_FILE),
         "consumer": {"date": consumer_date, "count": len(consumer_items)},
         "dev": {"date": dev_date, "count": len(dev_items)},
-        "database_id": args.database_id,
+        "database_id": db_id,
         "mode": "export-only",
         "written": 0,
         "skipped": [],
     }
     if not records:
+        print(json.dumps(result, ensure_ascii=False))
+        return
+
+    if not db_id:
+        result["note"] = ("未配置数据库 ID（--database-id 或 "
+                          "WORKBUDDY_LIBRARY_DATABASE_ID），仅导出")
+        log(result["note"])
         print(json.dumps(result, ensure_ascii=False))
         return
 
@@ -289,7 +298,7 @@ def main() -> None:
 
     result["mode"] = "write"
     try:
-        seen = existing_rows(db_dir, args.database_id)
+        seen = existing_rows(db_dir, db_id)
     except subprocess.TimeoutExpired:
         result["note"] = "查询已有记录超时，未写入以避免重复"
         print(json.dumps(result, ensure_ascii=False))
@@ -312,7 +321,7 @@ def main() -> None:
 
     if to_write:
         add_res = call_lib(db_dir, LIB_SCRIPT, None,
-                           ["--database-id", args.database_id,
+                           ["--database-id", db_id,
                             "--records", json.dumps(to_write, ensure_ascii=False)])
         row_results = add_res.get("results", []) or []
         success_ids = [r.get("id") for r in row_results if isinstance(r, dict) and r.get("success")]
@@ -332,7 +341,7 @@ def main() -> None:
 
     if to_update:
         upd_res = call_lib(db_dir, "batch_update_database_records.py", None,
-                           ["--database-id", args.database_id,
+                           ["--database-id", db_id,
                             "--records", json.dumps(to_update, ensure_ascii=False)])
         upd_rows = upd_res.get("results", []) or []
         result["updated"] = sum(1 for r in upd_rows if isinstance(r, dict) and r.get("success"))

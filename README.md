@@ -65,7 +65,7 @@ python tools/build_index.py site --all
 
 - 配置：`config-dev.json`（领域关键词、Trending 周期/条数、冷却期等都能改）。
 - 输出：`reports-dev/`、`data-dev/`，与普通人版的 `reports/`、`data/` 完全分开。
-- 想给程序员榜也加 AI 文案？它读的是 `data-dev/enriched_latest.json`，字段同普通人版（见 `AI_WORKFLOW.md`）；不加就用技术视角的兜底文案。
+- 想给程序员榜也加 AI 文案？运行 `python enrich.py --profile dev --enable`（默认关闭，支持 `--dry-run` / `--max-cost`）；不加就用技术视角的兜底文案。
 
 > 线上演示站每天 20:00 同时更新两个榜单：普通人版在首页，程序员榜在 `dev/` 页，顶部导航可切换。
 
@@ -137,6 +137,7 @@ python monitor.py stats      # 查看历史去重库统计
 python monitor.py validate   # 校验 AI 增强数据是否与当日候选一致
 python enrich.py --dry-run   # 查看 AI 增强 prompt 与预估费用（不发请求）
 python enrich.py --enable    # 调用 LLM 生成增强数据（可选）
+python enrich.py --profile dev --enable   # 程序员榜 AI 文案（可选）
 python tools/build_index.py site   # 生成普通人版归档索引页
 python tools/build_index.py site --all   # 生成两版归档页（带切换导航）
 

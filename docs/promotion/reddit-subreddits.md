@@ -39,7 +39,7 @@ A few details:
 - Markdown + self-contained HTML report
 - optional OpenAI-compatible enrichment, off by default
 - GitHub Actions + Pages for daily publishing
-- Python 3.10+ standard library only, 52 tests, MIT
+- Python 3.10+ standard library only, 56 tests, MIT
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 Demo: https://daily-atk.github.io/github-daily-monitor/

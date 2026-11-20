@@ -58,12 +58,20 @@ jobs:
       - name: Generate today's report (consumer)
         run: python monitor.py report
 
-      - name: Generate today's ranking (developer)
+      - name: Collect developer candidates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python monitor.py --profile dev collect
+
+      # 程序员榜 AI 文案同样是可选的；未配置密钥时自动跳过。
+      - name: AI enrichment (developer, optional)
+        if: ${{ env.LLM_API_KEY != '' && env.LLM_MODEL != '' }}
         run: |
-          python monitor.py --profile dev collect
-          python monitor.py --profile dev report
+          python enrich.py --profile dev --enable --max-cost 0.05
+          python monitor.py --profile dev validate || true
+
+      - name: Generate today's ranking (developer)
+        run: python monitor.py --profile dev report
 
       - name: Merge reports into site
         run: |
