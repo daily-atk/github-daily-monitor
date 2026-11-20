@@ -39,7 +39,7 @@ A few details:
 - Markdown + self-contained HTML report
 - optional OpenAI-compatible enrichment, off by default
 - GitHub Actions + Pages for daily publishing
-- Python 3.10+ standard library only, 36 tests, MIT
+- Python 3.10+ standard library only, 42 tests, MIT
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 Demo: https://daily-atk.github.io/github-daily-monitor/
@@ -117,7 +117,7 @@ def matches_terms(repo, terms):
 
 4) Optional AI: any OpenAI-compatible endpoint, off by default, with --dry-run and a cost cap.
 
-36 stdlib unit tests, GitHub Actions CI on Python 3.10 and 3.13.
+42 stdlib unit tests, GitHub Actions CI on Python 3.10 and 3.13.
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 
@@ -143,7 +143,7 @@ I open-sourced GitHub Daily Monitor, a small tool that turns GitHub into a daily
 
 - MIT licensed
 - Python 3.10+, standard library only
-- 36 unit tests + GitHub Actions CI
+- 42 unit tests + GitHub Actions CI
 - Optional GitHub Actions workflow that publishes the report and an archive to Pages
 - Optional AI enrichment, off by default
 
@@ -160,6 +160,26 @@ If you maintain an awesome list and think it fits, I'd appreciate a pointer to t
 
 ---
 
+## 首发（r/Python）操作清单
+
+选 r/Python 首发：技术受众最能理解实现细节、反馈质量高、且对 Showcase 类内容相对友好。
+
+**发布前**
+
+- [ ] 确认能正常访问 Reddit（国内通常不可直连）
+- [ ] 账号已注册并按社区规则养号（有真实发言记录，别用纯新号）
+- [ ] 先花 10 分钟读 r/Python 的 sidebar 规则和置顶帖，确认 Showcase flair 可用
+- [ ] 先回复 2–3 条别人的帖子，再发自己的
+- [ ] 复制上面 r/Python 的 Title + Body 备用
+
+**发布中 / 发布后**
+
+1. 打开 https://www.reddit.com/r/Python/submit，选 **Text** 类型
+2. 标题粘贴 Title，正文粘贴 Body，flair 选 **Showcase**
+3. 发布后 48 小时内守评论，逐条认真答；明确自己就是作者
+4. 有 bug 反馈就如实承认并说修复计划；不要删负评
+5. 24h 后到 `FEEDBACK_LOG.md` 记 Star 增量和评论质量
+
 ## 发布节奏建议
 
 | 顺序 | 版块 | 间隔 |
@@ -169,4 +189,4 @@ If you maintain an awesome list and think it fits, I'd appreciate a pointer to t
 | 3 | r/selfhosted | 第 5 天 |
 | 4 | r/opensource | 第 7 天 |
 
-每个版发完后至少留 48 小时回复评论，再考虑下一个版。
+每个版发完后至少留 48 小时回复评论，再考虑下一个版。**HN 和 Reddit 不要同一天发**——错开一周，先看 HN 反馈再调整 Reddit 文案。

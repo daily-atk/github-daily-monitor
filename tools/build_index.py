@@ -11,8 +11,17 @@ import argparse
 import html
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+try:
+    from lib.reporter import render_analytics_snippet
+except ImportError:  # 作为独立脚本分发时 lib 可能不在路径里
+    def render_analytics_snippet(cfg: dict) -> str:
+        return ""
 
 REPORT_RE = re.compile(r"^github-daily-(\d{4}-\d{2}-\d{2})\.html$")
 WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
@@ -41,7 +50,8 @@ def _weekday(date_str: str) -> str:
         return ""
 
 
-def render_index(reports: list[tuple[str, Path]], repo_url: str = "") -> str:
+def render_index(reports: list[tuple[str, Path]], repo_url: str = "",
+                 analytics_snippet: str = "") -> str:
     count = len(reports)
     latest = reports[0][0] if reports else "—"
 
@@ -70,6 +80,7 @@ def render_index(reports: list[tuple[str, Path]], repo_url: str = "") -> str:
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GitHub 普通人日报 · 历史归档</title>
+{analytics_snippet}
 <style>
 :root{{--bg:#f6f7f9;--card:#fff;--ink:#1f2328;--mut:#5b6572;--line:#e5e8ec;--brand:#2563eb}}
 *{{box-sizing:border-box}}
@@ -102,11 +113,27 @@ Not affiliated with GitHub
 </div></body></html>"""
 
 
-def build_index(site_dir: str | Path, repo_url: str = "") -> Path:
+def _load_analytics() -> str:
+    """读取项目 config.json 里的可选统计配置（失败时静默关闭）。"""
+    cfg_path = ROOT / "config.json"
+    if not cfg_path.exists():
+        return ""
+    try:
+        import json
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        return render_analytics_snippet(cfg)
+    except Exception:
+        return ""
+
+
+def build_index(site_dir: str | Path, repo_url: str = "",
+                analytics_snippet: str | None = None) -> Path:
     site = Path(site_dir)
     site.mkdir(parents=True, exist_ok=True)
     out = site / "index.html"
-    out.write_text(render_index(find_reports(site), repo_url), encoding="utf-8")
+    if analytics_snippet is None:
+        analytics_snippet = _load_analytics()
+    out.write_text(render_index(find_reports(site), repo_url, analytics_snippet), encoding="utf-8")
     return out
 
 

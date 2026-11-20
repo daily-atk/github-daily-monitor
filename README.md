@@ -121,6 +121,20 @@ python -m unittest discover -s tests -v   # 运行单元测试
 
 配置文件写错时，程序会用中文指出第几行第几列有问题，并说明常见原因（逗号、中文引号等）。
 
+### 可选：访问统计（默认关闭）
+
+想知道有多少人真的打开日报，可在 `config.json` 的 `analytics` 段开启一个**隐私友好**的统计（不用 cookie、不采集个人信息，只统计访问量）。默认 `off`，不注入任何外部脚本：
+
+```json
+"analytics": { "provider": "plausible", "domain": "你的统计域名" }
+```
+
+- `plausible`：填 `domain`（如 `daily-atk.github.io`），用 Plausible 官方托管或自托管。
+- `umami`：填 `website_id`，可选 `script_url`（默认 Umami 云）。
+- `custom`：填 `script`（完整 `<script>...</script>` 标签，如 GoatCounter），只接受 https 外链。
+
+统计脚本会同时注入每日报告页和历史归档页；关闭时两处都是纯静态、零外部请求。具体搭建步骤见 [`docs/FEEDBACK_LOG.md`](docs/FEEDBACK_LOG.md)。
+
 ## 提升采集额度（推荐）
 
 匿名访问 GitHub Search API 限流很低（约 10 次/分钟，容易 403）。配置 Token 后可大幅提速：

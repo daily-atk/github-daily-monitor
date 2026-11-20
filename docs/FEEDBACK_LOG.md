@@ -51,4 +51,20 @@ gh api repos/daily-atk/github-daily-monitor/stargazers -H "Accept: application/v
   --jq '.[].starred_at' | tail -20
 ```
 
-> Pages PV 需要单独接入隐私友好的统计（见方案 P1-5）后才能拿到；未接入前此列留空即可。
+### 接入 Pages 访问统计（P1-5，约 30 分钟）
+
+报告页和历史归档页都支持可选统计，默认关闭、零外部请求。推荐 Plausible（免费额度够用小站、不用 cookie、符合隐私友好）：
+
+1. 注册 Plausible 账号并添加你的站点 `daily-atk.github.io`（免费版无需绑卡）。
+2. 在 `config.json` 的 `analytics` 段填：
+
+   ```json
+   "analytics": { "provider": "plausible", "domain": "daily-atk.github.io" }
+   ```
+
+3. 重新生成报告与归档页（`python monitor.py report` 和 `python tools/build_index.py site`），或等下一次 Actions 自动跑。
+4. 打开日报页确认脚本已加载，过半天去 Plausible 面板看是否有访问记录。
+
+其他方案：`umami`（填 `website_id`）/ `custom`（填完整 `<script>` 标签，如 GoatCounter）。只需一种，不用同时配。不想用统计就保持 `provider: "off"`。
+
+> Pages PV 在接入统计前此列留空即可；接入后每周记一次数。

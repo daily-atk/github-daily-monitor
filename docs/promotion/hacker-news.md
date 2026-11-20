@@ -33,7 +33,7 @@ How it works:
 - Optional OpenAI-compatible enrichment, off by default, with --dry-run and a cost cap
 - GitHub Actions + Pages for daily publishing
 
-Zero dependencies (Python stdlib), 36 tests, MIT.
+Zero dependencies (Python stdlib), 42 tests, MIT.
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 Demo: https://daily-atk.github.io/github-daily-monitor/
@@ -51,6 +51,25 @@ A few implementation notes:
 - The AI layer is optional and cost-capped; without a key the tool uses rule-based copy. I wanted the project to be useful without an API bill.
 - The report is Chinese because the target audience is Chinese non-technical readers; the engine itself is language-agnostic.
 ```
+
+## 发布前操作清单（照着勾）
+
+- [ ] 确认 Demo `https://daily-atk.github.io/github-daily-monitor/` 可打开（英文读者网络也尽量测一下）
+- [ ] 确认仓库首页有截图、一句话介绍、可点击 Demo 链接（已就绪）
+- [ ] 确认 Release `v0.1.0` 存在（已就绪）
+- [ ] 注册/登录 Hacker News 账号，提前养号（新号发 Show HN 容易被压）
+- [ ] 把上面「标题」和「正文」复制到剪贴板备用
+- [ ] 备好第一条自评评论（技术细节），发布后立即跟贴
+- [ ] 选定发布时间：**美国东部工作日上午 8–10 点** ≈ 北京时间当晚 20:00–22:00
+
+## 发布中 / 发布后
+
+1. 打开 https://news.ycombinator.com/submit
+2. 标题粘贴「标题」区，URL 填 Demo 地址（Show HN 的 url 填产品页更自然）；正文粘贴「正文」到 text 框
+3. 提交后**立刻**在评论区贴「第一条评论」补充技术细节
+4. 之后 2–3 小时守在页面，逐条认真回复；负面评论也具体回应，不删不吵
+5. 若被 flag 或下沉，不要重发；隔天检查是否违反 Show HN 规则再决定
+6. 记录：发布后 24h 去 `FEEDBACK_LOG.md` 记 Star 增量和评论数
 
 ## 发布注意事项
 

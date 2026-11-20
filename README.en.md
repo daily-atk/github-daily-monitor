@@ -27,7 +27,8 @@ It is a tool, not a hand-curated magazine: run it yourself, schedule it, and pub
 - **One-click run** — `运行日报.bat` on Windows, `./run.sh` on macOS/Linux.
 - **Optional AI enrichment** — any OpenAI-compatible endpoint, off by default, with `--dry-run` and a cost cap.
 - **Optional GitHub Pages publishing** — a daily GitHub Actions workflow publishes the report and an archive index.
-- **Tests and CI** — 36 unit tests, no network calls; GitHub Actions runs them on Python 3.10 and 3.13.
+- **Optional privacy-friendly analytics** — off by default, no cookies, no personal data; injects into report and archive pages.
+- **Tests and CI** — 42 unit tests, no network calls; GitHub Actions runs them on Python 3.10 and 3.13.
 
 ## Quick start
 

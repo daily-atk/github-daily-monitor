@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lib.config import load_config
 from lib.reporter import (
-    _first_sentence, build_report_data, display_name, render_html,
-    render_markdown, validate_enriched,
+    _first_sentence, build_report_data, display_name, render_analytics_snippet,
+    render_html, render_markdown, validate_enriched,
 )
 from helpers import make_scored
 
@@ -99,6 +99,47 @@ class ReportRenderTests(unittest.TestCase):
             self.assertEqual(item["features"], "自定义功能")
             self.assertEqual(item["audience"], "自定义人群")
             self.assertEqual(item["difficulty"], "中")
+
+
+class AnalyticsTests(unittest.TestCase):
+    def test_off_by_default_injects_nothing(self):
+        self.assertEqual(render_analytics_snippet(CFG), "")
+
+    def test_plausible_snippet(self):
+        snip = render_analytics_snippet({"analytics": {
+            "provider": "plausible", "domain": "daily-atk.github.io"}})
+        self.assertIn("plausible.io/js/script.js", snip)
+        self.assertIn('data-domain="daily-atk.github.io"', snip)
+
+    def test_umami_snippet(self):
+        snip = render_analytics_snippet({"analytics": {
+            "provider": "umami", "website_id": "abc-123"}})
+        self.assertIn('data-website-id="abc-123"', snip)
+        self.assertIn("https://", snip)
+
+    def test_custom_https_only(self):
+        good = render_analytics_snippet({"analytics": {
+            "provider": "custom",
+            "script": "<script defer src='https://gc.zgo.at/count.js'></script>"}})
+        self.assertIn("gc.zgo.at", good)
+        bad = render_analytics_snippet({"analytics": {
+            "provider": "custom",
+            "script": "<script src='http://evil.example/x.js'></script>"}})
+        self.assertEqual(bad, "")
+
+    def test_html_injection_when_enabled(self):
+        data = build_report_data([make_scored("ok/app")], CFG, "2026-11-19")
+        snip = render_analytics_snippet({"analytics": {
+            "provider": "plausible", "domain": "example.com"}})
+        out = render_html(data, snip)
+        self.assertIn("plausible.io/js/script.js", out)
+        self.assertIn("</head>", out)
+
+    def test_no_snippet_keeps_clean_head(self):
+        data = build_report_data([make_scored("ok/app")], CFG, "2026-11-19")
+        out = render_html(data)
+        self.assertNotIn("plausible", out)
+        self.assertNotIn("<script", out)
 
 
 class ValidateEnrichedTests(unittest.TestCase):

@@ -22,6 +22,52 @@ GENERIC_REPO_NAMES = {
 REQUIRED_ENRICH_FIELDS = ("features", "audience", "value", "difficulty", "notes")
 
 
+def render_analytics_snippet(cfg: dict) -> str:
+    """生成可选访问统计的 <script> 片段；默认 off 时返回空串（零外部请求）。
+
+    支持三种隐私友好方案：
+      - plausible: 只统计页面浏览，不用 cookie
+      - umami:     自托管/云端的无 cookie 统计
+      - custom:    用户自填完整 <script> 标签（如 GoatCounter 等）
+    所有外部 URL 必须是 https，防止混合内容与注入。
+    """
+    an = strip_notes(cfg.get("analytics") or {})
+    if not isinstance(an, dict):
+        return ""
+    provider = str(an.get("provider") or "off").strip().lower()
+    if provider == "off":
+        return ""
+
+    if provider == "plausible":
+        domain = str(an.get("domain") or "").strip()
+        if not domain or not re.fullmatch(r"[A-Za-z0-9.\-]+", domain):
+            return ""
+        return ('<script defer data-domain="%s" src="https://plausible.io/js/script.js"></script>'
+                % html.escape(domain, quote=True))
+
+    if provider == "umami":
+        wid = str(an.get("website_id") or "").strip()
+        script_url = str(an.get("script_url") or "https://cloud.umami.is/script.js").strip()
+        if not wid or not script_url.lower().startswith("https://"):
+            return ""
+        return ('<script defer src="%s" data-website-id="%s"></script>'
+                % (html.escape(script_url, quote=True), html.escape(wid, quote=True)))
+
+    if provider == "custom":
+        script = str(an.get("script") or "").strip()
+        if not script or "<script" not in script.lower() or "</script>" not in script.lower():
+            return ""
+        # 拒绝明显的 javascript: 伪协议与非 https 外链，降低注入风险
+        if "javascript:" in script.lower():
+            return ""
+        for m in re.finditer(r'src\s*=\s*["\']([^"\']+)["\']', script, re.I):
+            if not m.group(1).lower().startswith("https://"):
+                return ""
+        return script
+
+    return ""
+
+
 def _first_sentence(text: str, limit: int = 140) -> str:
     t = (text or "").strip()
     if not t:
@@ -279,7 +325,7 @@ def render_markdown(data: dict) -> str:
     return "\n".join(lines)
 
 
-def render_html(data: dict) -> str:
+def render_html(data: dict, analytics_snippet: str = "") -> str:
     d = data["date"]
     cooldown = data.get("cooldown_days", 30)
     cards = []
@@ -355,7 +401,7 @@ a{{color:var(--brand);text-decoration:none}} a:hover{{text-decoration:underline}
 .metrics{{display:flex;gap:14px;color:var(--mut)}} .links{{display:flex;gap:14px}}
 footer{{text-align:center;color:var(--mut);font-size:12px;margin-top:36px}}
 @media(max-width:600px){{.grid{{grid-template-columns:1fr}}.foot{{flex-direction:column;gap:10px}}}}
-</style></head><body><div class="wrap">
+</style>{analytics_snippet}</head><body><div class="wrap">
 <header><h1>🛰️ 每日 GitHub 实用项目速递</h1><div class="sub">{d} · 为普通人筛选的真有用项目</div></header>
 <div class="summary">今日从 GitHub 筛选出 <b>{data['count']}</b> 个对普通人真正有用的项目，按推荐优先级排序。<br>只看「能不能帮到学习 / 生活 / 效率 / 健康 / 财务」，不堆开发者玩具。</div>
 <table><thead><tr><th>#</th><th>项目</th><th>领域</th><th>推荐分</th></tr></thead><tbody>{rows}</tbody></table>
@@ -377,6 +423,6 @@ def save_reports(data: dict, cfg: dict) -> list[Path]:
         written.append(p)
     if "html" in out.get("formats", ["md", "html"]):
         p = rd / f"github-daily-{data['date']}.html"
-        p.write_text(render_html(data), encoding="utf-8")
+        p.write_text(render_html(data, render_analytics_snippet(cfg)), encoding="utf-8")
         written.append(p)
     return written

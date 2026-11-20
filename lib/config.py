@@ -114,6 +114,23 @@ def validate_config(cfg: dict) -> None:
     elif out is not None:
         errors.append("output 必须是一个 { ... } 对象")
 
+    an = cfg.get("analytics")
+    if an is not None:
+        if not isinstance(an, dict):
+            errors.append("analytics 必须是一个 { ... } 对象")
+        else:
+            provider = str(an.get("provider") or "off").strip().lower()
+            if provider not in ("off", "plausible", "umami", "custom"):
+                errors.append(
+                    f"analytics.provider 只支持 off / plausible / umami / custom，当前是 {provider}"
+                )
+            if provider == "plausible" and not str(an.get("domain") or "").strip():
+                errors.append("analytics.provider=plausible 时需要填 domain（你的统计域名）")
+            if provider == "umami" and not str(an.get("website_id") or "").strip():
+                errors.append("analytics.provider=umami 时需要填 website_id")
+            if provider == "custom" and not str(an.get("script") or "").strip():
+                errors.append("analytics.provider=custom 时需要填 script（统计服务的 script 标签）")
+
     if errors:
         raise ConfigError("config.json 配置有问题：\n- " + "\n- ".join(errors))
 

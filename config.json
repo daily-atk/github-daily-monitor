@@ -74,5 +74,13 @@
     "keep_reports_days": 90
   },
 
+  "analytics": {
+    "_comment": "可选的隐私友好访问统计，默认 off（不注入任何脚本、零外部请求）。plausible/umami 需填对应域名或ID；custom 填完整 script 标签。只统计访问量，不用 cookie、不采集个人信息。",
+    "provider": "off",
+    "_example_plausible": { "provider": "plausible", "domain": "daily-atk.github.io" },
+    "_example_umami": { "provider": "umami", "website_id": "你的网站ID", "script_url": "https://cloud.umami.is/script.js" },
+    "_example_custom": { "provider": "custom", "script": "<script defer data-website-id='xxx' src='https://.../script.js'></script>" }
+  },
+
   "github_token_env": "GITHUB_TOKEN"
 }
