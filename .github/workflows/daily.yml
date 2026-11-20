@@ -55,20 +55,29 @@ jobs:
           python enrich.py --enable --max-cost 0.05
           python monitor.py validate || true
 
-      - name: Generate today's report
+      - name: Generate today's report (consumer)
         run: python monitor.py report
 
-      - name: Merge report into site
+      - name: Generate today's ranking (developer)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p site
+          python monitor.py --profile dev collect
+          python monitor.py --profile dev report
+
+      - name: Merge reports into site
+        run: |
+          mkdir -p site/dev
           rm -rf site/.git
           cp reports/github-daily-*.html site/ 2>/dev/null || true
           cp reports/github-daily-*.md site/ 2>/dev/null || true
+          cp reports-dev/dev-daily-*.html site/dev/ 2>/dev/null || true
+          cp reports-dev/dev-daily-*.md site/dev/ 2>/dev/null || true
 
-      - name: Build archive index
+      - name: Build archive index (both editions)
         env:
           REPO_URL: https://github.com/${{ github.repository }}
-        run: python tools/build_index.py site
+        run: python tools/build_index.py site --all
 
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4

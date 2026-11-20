@@ -8,6 +8,8 @@
 
 **See today's digest** → [daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/) — updated daily, no install needed.
 
+> **Two editions, one codebase.** 📚 **Consumer digest** (default) picks tools ordinary people can use. 🔥 **Developer ranking** (`--profile dev`) ranks projects by real GitHub Trending star growth. Config/data/reports are isolated per edition; switch from the nav bar on the demo site.
+
 ## Why this exists
 
 GitHub Trending and curated newsletters are great for developers. But most "useful project" lists are still written for people who already know what a repository, a framework, or a CLI is.
@@ -28,7 +30,8 @@ It is a tool, not a hand-curated magazine: run it yourself, schedule it, and pub
 - **Optional AI enrichment** — any OpenAI-compatible endpoint, off by default, with `--dry-run` and a cost cap.
 - **Optional GitHub Pages publishing** — a daily GitHub Actions workflow publishes the report and an archive index.
 - **Optional privacy-friendly analytics** — off by default, no cookies, no personal data; injects into report and archive pages.
-- **Tests and CI** — 42 unit tests, no network calls; GitHub Actions runs them on Python 3.10 and 3.13.
+- **Two editions** — a consumer digest and a developer ranking driven by GitHub Trending star growth, with isolated config/data/reports (`--profile dev`).
+- **Tests and CI** — 52 unit tests, no network calls; GitHub Actions runs them on Python 3.10 and 3.13.
 
 ## Quick start
 

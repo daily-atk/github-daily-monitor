@@ -187,6 +187,45 @@ def _default_enrich(item: dict) -> dict:
     }
 
 
+def _default_enrich_dev(item: dict) -> dict:
+    """程序员版兜底文案：技术视角，不谈'适合普通人的价值'。"""
+    desc = (item.get("description") or "").strip()
+    topics = [str(t) for t in (item.get("topics") or [])]
+    lang = item.get("language") or "未标注语言"
+    lic = item.get("license") or "未标注许可证"
+    growth = item.get("stars_growth", 0)
+    period = "今日" if item.get("growth_period", "daily") == "daily" else "本周"
+
+    notes_parts = []
+    pushed = item.get("pushed_at") or ""
+    if pushed:
+        try:
+            pd = datetime.fromisoformat(pushed.replace("Z", "+00:00"))
+            days = (datetime.now(timezone.utc) - pd).days
+            if days <= 30:
+                notes_parts.append("近 30 天有提交，维护活跃")
+            elif days > 365:
+                notes_parts.append(f"最近更新在 {days} 天前，接入前先确认维护状态")
+        except Exception:
+            pass
+    if not item.get("license"):
+        notes_parts.append("未标注开源许可证，商用/二次分发前请确认授权")
+    notes_parts.append("热度来自 Trending，选型请结合文档与实际测试")
+    topic_text = "、".join(topics[:3]) if topics else lang
+
+    return {
+        "full_name": item["full_name"],
+        "features": _first_sentence(desc) or desc,
+        "audience": "",  # 程序员版不用这个字段
+        "value": "",
+        "difficulty": "中",
+        "notes": "；".join(notes_parts),
+        # 程序员版专用展示字段
+        "tech": f"{lang} · {lic}",
+        "highlight": f"{period}新增 {growth:,} star，话题集中在 {topic_text}。",
+    }
+
+
 def load_enriched(path: Path, expect_date: str | None = None) -> dict:
     if not path.exists():
         return {}
@@ -253,9 +292,10 @@ def build_report_data(candidates: list[dict], cfg: dict, date_str: str,
     enriched = load_enriched(enriched_path, expect_date=date_str) if enriched_path else {}
     by_name = {c["full_name"]: c for c in candidates}
     items = []
+    is_dev = cfg.get("mode") == "developer"
 
     def make_item(item: dict, e: dict, rank: int) -> dict:
-        fallback = _default_enrich(item)
+        fallback = _default_enrich_dev(item) if is_dev else _default_enrich(item)
         return {
             "rank": rank,
             **item,
@@ -277,11 +317,68 @@ def build_report_data(candidates: list[dict], cfg: dict, date_str: str,
             items.append(make_item(c, {}, len(items) + 1))
 
     cooldown = strip_notes(cfg.get("dedup", {})).get("cooldown_days", 30)
+    is_dev = cfg.get("mode") == "developer"
+    trending = strip_notes(cfg.get("trending") or {})
     return {"date": date_str, "generated_at": datetime.now().isoformat(timespec="seconds"),
-            "count": len(items), "cooldown_days": cooldown, "items": items}
+            "count": len(items), "cooldown_days": cooldown, "items": items,
+            "mode": "developer" if is_dev else "consumer",
+            "growth_period": trending.get("period", "daily")}
+
+
+def _growth_label(data: dict) -> str:
+    return "今日新增" if data.get("growth_period", "daily") == "daily" else "本周新增"
+
+
+def _render_markdown_dev(data: dict) -> str:
+    """程序员排行榜版 Markdown：按热度排，突出新增 star，去掉普通人维度。"""
+    d = data["date"]
+    cooldown = data.get("cooldown_days", 14)
+    gl = _growth_label(data)
+    lines = [
+        f"# 🔥 GitHub 程序员热度榜 · {d}",
+        "",
+        f"> 按 GitHub Trending 真实 **{gl} star** 排序，收录今日最受开发者关注的项目。",
+        "> 数据源：GitHub Trending + 近期新建高星项目，非人工精选，仅供参考。",
+        "",
+        f"| 排名 | 项目 | 方向 | {gl} star | 总 star | 热度分 |",
+        "|:---:|---|:---:|---:|---:|---:|",
+    ]
+    for it in data["items"]:
+        growth = it.get("stars_growth", 0)
+        lines.append(
+            f"| {it['rank']} | [{it['full_name']}]({it['url']}) | {it['category_label']} "
+            f"| 🔥 +{growth:,} | ⭐ {it['stars']:,} | {it['score']} |"
+        )
+    lines += ["", "---", ""]
+    for it in data["items"]:
+        title = it.get("display_name") or it["name"]
+        growth = it.get("stars_growth", 0)
+        lic = it.get("license") or "未标注"
+        topics = "、".join(it.get("topics", [])[:6]) or "—"
+        lines += [
+            f"## {it['rank']}. [{title}]({it['url']}) — {it['category_label']}",
+            "",
+            f"- 🔗 链接：{it['url']}" + (f" ｜ 官网：{it['homepage']}" if it.get("homepage") else ""),
+            f"- 📝 项目：{it['features']}",
+            f"- 🔥 热度：{gl} **+{growth:,}** star ｜ 累计 ⭐ {it['stars']:,} ｜ 🍴 {it['forks']:,}",
+            f"- 🛠️ 技术栈：{it['language'] or '—'} ｜ 📄 许可证：{lic} ｜ 🕒 最近更新：{_date(it.get('pushed_at'))}",
+            f"- 🏷️ 主题：{topics}",
+            f"- ⚠️ 提示：{it['notes']}",
+            "",
+        ]
+    lines += [
+        "---",
+        "",
+        f"*本榜由「GitHub 监测助手·程序员版」自动生成，同一项目 {cooldown} 天内不重复上榜。*",
+        "*热度数据来自 GitHub Trending，会实时变化；技术选型请自行调研，使用前以项目页面为准。*",
+        "*Not affiliated with GitHub.*",
+    ]
+    return "\n".join(lines)
 
 
 def render_markdown(data: dict) -> str:
+    if data.get("mode") == "developer":
+        return _render_markdown_dev(data)
     d = data["date"]
     cooldown = data.get("cooldown_days", 30)
     lines = [
@@ -325,7 +422,94 @@ def render_markdown(data: dict) -> str:
     return "\n".join(lines)
 
 
+def _render_html_dev(data: dict, analytics_snippet: str = "") -> str:
+    """程序员排行榜版 HTML：深色主题，突出热度增长数字。"""
+    d = data["date"]
+    cooldown = data.get("cooldown_days", 14)
+    gl = _growth_label(data)
+    cards = []
+    for it in data["items"]:
+        growth = it.get("stars_growth", 0)
+        title = it.get("display_name") or it["name"]
+        homepage_url = _safe_url(it.get("homepage") or "")
+        homepage = (
+            f'<a class="home" href="{html.escape(homepage_url)}" target="_blank" rel="noopener">官网 ↗</a>'
+            if homepage_url else ""
+        )
+        topics = "".join(f'<span class="tag">{html.escape(t)}</span>' for t in it.get("topics", [])[:6])
+        cards.append(f"""
+        <article class="card" id="{it['rank']}">
+          <div class="card-top">
+            <span class="rank">#{it['rank']}</span>
+            <span class="cat">{html.escape(it['category_label'])}</span>
+            <span class="growth">🔥 +{growth:,} {gl}</span>
+          </div>
+          <h2><a href="{html.escape(it['url'])}" target="_blank" rel="noopener">{html.escape(title)}</a></h2>
+          <div class="repo">{html.escape(it['full_name'])}</div>
+          <p class="features">{html.escape(it['features'])}</p>
+          <div class="grid">
+            <div class="cell"><span class="k">⭐ 累计星标</span><span class="v big">{it['stars']:,}</span></div>
+            <div class="cell"><span class="k">🍴 Fork</span><span class="v big">{it['forks']:,}</span></div>
+            <div class="cell"><span class="k">🛠️ 语言</span><span class="v">{html.escape(it['language'] or '—')}</span></div>
+            <div class="cell"><span class="k">📄 许可证</span><span class="v">{html.escape(it.get('license') or '未标注')}</span></div>
+            <div class="cell"><span class="k">🕒 最近更新</span><span class="v">{_date(it.get('pushed_at'))}</span></div>
+            <div class="cell"><span class="k">📦 来源</span><span class="v">{'Trending 榜' if it.get('source')=='trending' else '搜索补充'}</span></div>
+            <div class="cell full"><span class="k">🏷️ 主题</span><span class="v">{topics or '—'}</span></div>
+            <div class="cell full"><span class="k">⚠️ 提示</span><span class="v">{html.escape(it['notes'])}</span></div>
+          </div>
+          <div class="foot">
+            <div class="metrics"><span>热度分 {it['score']}</span><span>⭐ {it['stars']:,}</span></div>
+            <div class="links"><a href="{html.escape(it['url'])}" target="_blank" rel="noopener">GitHub ↗</a>{homepage}</div>
+          </div>
+        </article>""")
+    rows = "".join(
+        f"<tr><td>{it['rank']}</td><td><a href='#{it['rank']}'>{html.escape(it.get('display_name') or it['name'])}</a></td>"
+        f"<td>{html.escape(it['category_label'])}</td><td class='hot'>+{it.get('stars_growth',0):,}</td><td>{it['score']}</td></tr>"
+        for it in data["items"]
+    )
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GitHub 程序员热度榜 · {d}</title>
+<style>
+:root{{--bg:#0d1117;--card:#161b22;--ink:#e6edf3;--mut:#8b949e;--line:#30363d;--brand:#58a6ff;--hot:#f85149}}
+*{{box-sizing:border-box}}
+body{{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}}
+.wrap{{max-width:900px;margin:0 auto;padding:32px 18px 60px}}
+header{{text-align:center;padding:18px 0 26px}}
+h1{{font-size:27px;margin:0 0 8px}} .sub{{color:var(--mut);font-size:14px}}
+.summary{{background:#161b22;border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:18px 0 26px;color:#c9d1d9;font-size:14px}}
+table{{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px}}
+th,td{{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}}
+th{{background:#1c2128;color:var(--mut);font-weight:600}} td.hot{{color:var(--hot);font-weight:700}}
+a{{color:var(--brand);text-decoration:none}} a:hover{{text-decoration:underline}}
+.card{{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0}}
+.card-top{{display:flex;gap:10px;align-items:center;margin-bottom:10px}}
+.rank{{background:#30363d;color:#fff;border-radius:8px;padding:2px 9px;font-weight:700;font-size:13px}}
+.cat{{background:#1f2b3d;color:#79c0ff;border-radius:20px;padding:2px 11px;font-size:12px}}
+.growth{{margin-left:auto;color:var(--hot);font-size:13px;font-weight:700}}
+.card h2{{font-size:19px;margin:0 0 2px}} .repo{{color:var(--mut);font-size:12px;margin-bottom:12px}}
+.features{{margin:0 0 14px;color:#c9d1d9}}
+.grid{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}}
+.cell{{background:#0d1117;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}}
+.cell.full{{grid-column:1/-1}} .k{{display:block;color:var(--mut);font-size:12px;margin-bottom:3px}} .v{{color:#e6edf3}} .v.big{{font-size:17px;font-weight:700}}
+.tags{{margin:6px 0 12px}} .tag{{display:inline-block;background:#21262d;color:#8b949e;border-radius:6px;padding:1px 8px;font-size:11px;margin:0 5px 5px 0}}
+.foot{{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px;font-size:13px}}
+.metrics{{display:flex;gap:14px;color:var(--mut)}} .links{{display:flex;gap:14px}}
+footer{{text-align:center;color:var(--mut);font-size:12px;margin-top:36px}}
+@media(max-width:600px){{.grid{{grid-template-columns:1fr}}.foot{{flex-direction:column;gap:10px}}}}
+</style>{analytics_snippet}</head><body><div class="wrap">
+<header><h1>🔥 GitHub 程序员热度榜</h1><div class="sub">{d} · 按真实 {gl} star 增长排序</div></header>
+<div class="summary">数据源 GitHub Trending + 近期新建高星项目，收录开发者社区今日真正关注的项目。<br>热度来自真实 star 增长，非人工精选；技术选型请以项目页面为准。</div>
+<table><thead><tr><th>#</th><th>项目</th><th>方向</th><th>{gl} star</th><th>热度分</th></tr></thead><tbody>{rows}</tbody></table>
+{''.join(cards)}
+<footer>本榜由「GitHub 监测助手·程序员版」自动生成 · 同一项目 {cooldown} 天内不重复上榜<br>热度数据实时变化 · Not affiliated with GitHub</footer>
+</div></body></html>"""
+
+
 def render_html(data: dict, analytics_snippet: str = "") -> str:
+    if data.get("mode") == "developer":
+        return _render_html_dev(data, analytics_snippet)
     d = data["date"]
     cooldown = data.get("cooldown_days", 30)
     cards = []
@@ -416,13 +600,14 @@ def save_reports(data: dict, cfg: dict) -> list[Path]:
     from .config import root_path
     rd = root_path(reports_dir)
     rd.mkdir(parents=True, exist_ok=True)
+    prefix = out.get("file_prefix") or "github-daily"
     written = []
     if "md" in out.get("formats", ["md", "html"]):
-        p = rd / f"github-daily-{data['date']}.md"
+        p = rd / f"{prefix}-{data['date']}.md"
         p.write_text(render_markdown(data), encoding="utf-8")
         written.append(p)
     if "html" in out.get("formats", ["md", "html"]):
-        p = rd / f"github-daily-{data['date']}.html"
+        p = rd / f"{prefix}-{data['date']}.html"
         p.write_text(render_html(data, render_analytics_snippet(cfg)), encoding="utf-8")
         written.append(p)
     return written

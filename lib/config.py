@@ -11,8 +11,24 @@ class ConfigError(ValueError):
     """配置文件有误（中文提示，方便非技术用户排查）。"""
 
 
-def load_config(path: str | Path | None = None) -> dict:
-    p = Path(path) if path else ROOT / "config.json"
+# profile -> 配置文件名。consumer=普通人版（默认），dev=程序员排行榜版。
+PROFILE_FILES = {
+    "consumer": "config.json",
+    "dev": "config-dev.json",
+}
+
+
+def config_path_for(profile: str) -> Path:
+    name = PROFILE_FILES.get(profile) or f"config-{profile}.json"
+    return ROOT / name
+
+
+def load_config(path: str | Path | None = None, profile: str = "consumer") -> dict:
+    """加载配置。profile=consumer 用 config.json，dev 用 config-dev.json。
+
+    两版各自声明独立的输出/去重路径，互不污染；未显式指定 path 时按 profile 选择。
+    """
+    p = Path(path) if path else config_path_for(profile)
     if not p.exists():
         raise ConfigError(f"找不到配置文件：{p}")
     try:
@@ -20,9 +36,10 @@ def load_config(path: str | Path | None = None) -> dict:
             cfg = json.load(f)
     except json.JSONDecodeError as e:
         raise ConfigError(
-            f"config.json 第 {e.lineno} 行第 {e.colno} 列格式有误：{e.msg}。\n"
+            f"{p.name} 第 {e.lineno} 行第 {e.colno} 列格式有误：{e.msg}。\n"
             "常见原因：少了或多了英文逗号、用了中文引号“”，或最后一项后面多了逗号。"
         ) from e
+    cfg["_profile"] = profile
     validate_config(cfg)
     return cfg
 
@@ -113,6 +130,32 @@ def validate_config(cfg: dict) -> None:
                 errors.append(f"output.formats 里有不认识的值：{bad}（只支持 md / html）")
     elif out is not None:
         errors.append("output 必须是一个 { ... } 对象")
+
+    # mode: consumer=普通人版(默认) / developer=程序员排行榜版
+    mode = cfg.get("mode", "consumer")
+    if mode not in ("consumer", "developer"):
+        errors.append(f"mode 只能是 consumer 或 developer，当前是 {mode}")
+
+    # trending: 程序员版数据源（GitHub Trending 页面）
+    tr = cfg.get("trending")
+    if tr is not None:
+        if not isinstance(tr, dict):
+            errors.append("trending 必须是一个 { ... } 对象")
+        else:
+            period = str(tr.get("period", "daily"))
+            if period not in ("daily", "weekly"):
+                errors.append(f"trending.period 只能是 daily 或 weekly，当前是 {period}")
+            _check_int(errors, tr, "count", minimum=1, maximum=50, where="trending")
+            delay = tr.get("request_delay_seconds", 2)
+            if not isinstance(delay, (int, float)) or isinstance(delay, bool) or delay < 0:
+                errors.append("trending.request_delay_seconds 必须是 >=0 的数字")
+            detail = tr.get("enrich_with_api")
+            if detail is not None and not isinstance(detail, bool):
+                errors.append("trending.enrich_with_api 必须是 true 或 false")
+
+    run_log = cfg.get("run_log_file")
+    if run_log is not None and not isinstance(run_log, str):
+        errors.append("run_log_file 必须是一个相对路径字符串")
 
     an = cfg.get("analytics")
     if an is not None:

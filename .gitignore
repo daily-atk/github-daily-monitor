@@ -3,12 +3,19 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# 运行时数据（每日自动生成，不应入库）
+# 运行时数据（每日自动生成，不应入库）—— 普通人版
 data/cache/
 data/history.json
 data/history.backup-*.json
 data/candidates_latest.json
 data/enriched_latest.json
+
+# 运行时数据 —— 程序员榜版（profile=dev，独立目录）
+data-dev/
+reports-dev/
+
+# 个人资料库同步产物（含本地数据库 ID，不入库）
+data/top3_for_library.json
 
 # 每日报告为运行产物，默认不入库
 reports/*.md

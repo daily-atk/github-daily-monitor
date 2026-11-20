@@ -64,8 +64,28 @@ python monitor.py report
 ```
 脚本会把增强内容合并进 Markdown + HTML 报告，写到 `reports/` 目录。
 
-### 4. 呈现
-用文件展示工具把当天生成的 `.html` 和 `.md` 报告呈现给用户，并在回复里用 3-5 句话概括今天最值得看的 1-2 个项目。
+### 4. 生成程序员热度榜
+```bash
+python monitor.py --profile dev run
+```
+它抓 GitHub Trending 真实新增 star，按热度排序，写到 `data-dev/candidates_latest.json` 和 `reports-dev/`。程序员榜不需要 AI 语义终筛（默认用技术视角兜底文案）；想加 AI 文案可写 `data-dev/enriched_latest.json`（格式同普通人版）后重跑 `python monitor.py --profile dev report`。
+
+### 5. 同步两榜前三名到资料库
+```bash
+python tools/sync_library.py
+```
+从两版最新数据各取前 3（共 6 条），写到 `data/top3_for_library.json`，并追加到资料库表格
+「GitHub 每日榜单前三名」（database_id: `xX25PIiOQbZsat3exiY0oT`）。
+表格 17 字段：日期 / 榜单 / 排名 / 项目 / 链接 / 一句话看点（中文，优先用第 2 步写的中文 features，否则按用途关键词生成）/ 语言 / 总Star / 今日新增Star / 适合人群 / 实用价值 / 上手难度 / 注意事项 / 方向分类 / 许可证 / 项目主页 / 技术亮点（程序员榜）。
+按「日期 + 榜单 + 名次」幂等：项目相同则跳过，项目变了则更新，不会重复插入。
+- stdout 是单行 JSON：`written` 新增数、`updated` 更新数、`skipped` 跳过数。
+- 若 `mode=export-only`（自动化环境未找到资料库脚本），用资料库能力把 `data/top3_for_library.json` 的 records（已含全部 17 字段）写入该表，按「日期+榜单+排名」去重。
+- `--force-update` 仅用于回填历史记录，日常自动化不要用。
+
+### 6. 呈现
+用文件展示工具把当天 4 份报告（普通人版 `.html`/`.md`、程序员版 `.html`/`.md`）呈现给用户：
+普通人榜用 3-5 句话概括最值得看的 1-2 个项目，程序员榜用 1-2 句话概括热门项目；
+并说明两榜前三名已同步到资料库表格，报一下新增/跳过条数。
 
 ## 去重说明
 历史去重由脚本自动完成：同一项目 30 天内不会重复推荐，且所有见过的项目都会记入 `data/history.json`。不要手动修改历史文件。

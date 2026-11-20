@@ -55,6 +55,27 @@ CATEGORY_LABEL = {
     "健康": "💪 健康", "财务": "💰 财务", "综合": "🧰 综合",
 }
 
+# 程序员版分类标签
+DEV_CATEGORY_LABEL = {
+    "AI/LLM": "🤖 AI/LLM", "开发工具": "🛠️ 开发工具", "框架/库": "🧩 框架/库",
+    "数据库/存储": "🗄️ 数据库/存储", "DevOps/ infra": "⚙️ DevOps", "安全": "🔒 安全",
+    "前端": "🎨 前端", "系统/语言": "💻 系统/语言", "综合": "🧰 综合",
+    "Trending": "🔥 Trending",
+}
+
+# 程序员版：技术价值正向信号（命中加分，与普通人版相反）
+DEV_POSITIVE_WORDS = {
+    "framework", "library", "sdk", "engine", "database", "compiler", "runtime",
+    "kubernetes", "cli", "api", "open source", "typescript", "rust", "go",
+    "performance", "self-hosted", "developer", "tooling", "agent", "llm",
+    "vector", "embedding", "inference", "observability", "orm", "bundler",
+}
+# 程序员版：成熟/可信信号
+DEV_QUALITY_WORDS = {
+    "production", "battle-tested", "used by", "framework", "documentation",
+    "typescript", "tests", "benchmark", "actively maintained",
+}
+
 # 平台推断规则（用于报告里告诉普通人"手机/电脑能不能用"）
 PLATFORM_RULES = [
     ("手机", ("android", "ios", "iphone", "ipad", "mobile", "手机")),
@@ -307,9 +328,12 @@ def score_repo(r: dict, category: str, cfg: dict) -> dict:
     }
 
 
-def dedup_and_select(scored: list[dict], cfg: dict, history: dict
-                     ) -> tuple[list[dict], dict]:
-    """去重（推荐冷却 + 近期见过冷却）并按领域配额选出 Top N。"""
+def dedup_and_select(scored: list[dict], cfg: dict, history: dict,
+                     by_growth: bool = False) -> tuple[list[dict], dict]:
+    """去重（推荐冷却 + 近期见过冷却）并按领域配额选出 Top N。
+
+    by_growth=True 时按 stars_growth 排序（程序员热度榜），且 min_score 门槛放宽。
+    """
     d = strip_notes(cfg["dedup"])
     sc = strip_notes(cfg["scoring"])
     cooldown = d.get("cooldown_days", 30)
@@ -355,7 +379,11 @@ def dedup_and_select(scored: list[dict], cfg: dict, history: dict
         if fn not in best or item["score"] > best[fn]["score"]:
             best[fn] = item
 
-    ranked = sorted(best.values(), key=lambda x: (-x["score"], -x["stars"]))
+    if by_growth:
+        ranked = sorted(best.values(), key=lambda x: (-(x.get("stars_growth") or 0),
+                                                      -x["score"], -x["stars"]))
+    else:
+        ranked = sorted(best.values(), key=lambda x: (-x["score"], -x["stars"]))
     min_score = sc.get("min_score", 45)
     ranked = [x for x in ranked if x["score"] >= min_score]
 
@@ -422,3 +450,125 @@ def normalize_history(history: dict) -> bool:
             rec["last_seen"] = rec.get("last_recommended") or rec.get("first_seen")
             changed = True
     return changed
+
+# ============================================================
+# 程序员排行榜版：反转打分逻辑（技术价值 + 近期热度为正）
+# ============================================================
+
+def score_repo_dev(r: dict, category: str, cfg: dict) -> dict:
+    """程序员版打分：核心是近期 star 增长，辅以技术价值、活跃度、许可证。
+
+    与普通人版相反：开发者 infrastructure 信号在这里是加分项。
+    """
+    sc = strip_notes(cfg["scoring"])
+    name = r.get("full_name", "")
+    desc = r.get("description") or ""
+    topics = [str(t) for t in (r.get("topics") or [])]
+    text = f"{name} {desc} {' '.join(topics)}"
+
+    growth = int(r.get("stars_growth") or 0)          # 今日/本周新增 star
+    stars = r.get("stargazers_count", 0)
+    period = r.get("growth_period", "daily")
+
+    # 增长分（对数压缩，避免头部项目一家独大）
+    import math
+    growth_score = math.log10(growth + 1) * 12 if growth else 0
+    growth_score = min(growth_score, 30)
+
+    positive_hits = _hits(text, DEV_POSITIVE_WORDS)
+    quality_hits = _hits(text, DEV_QUALITY_WORDS)
+
+    lic = r.get("license") or {}
+    spdx = (lic.get("spdx_id") or "") if isinstance(lic, dict) else ""
+    if not spdx and isinstance(r.get("license"), str):
+        spdx = r["license"]
+    if spdx.upper() in ("NOASSERTION", "NONE"):
+        spdx = ""
+
+    score = 30.0
+    score += growth_score                              # 热度是主角
+    score += min(positive_hits, 6) * 2.5               # 技术价值信号
+    score += min(quality_hits, 4) * 2.0                # 成熟可信信号
+    score += min(len(topics), 6) * 1.0
+    if stars >= 10000:
+        score += 8
+    elif stars >= 1000:
+        score += 5
+    elif stars >= 300:
+        score += 2
+    if r.get("homepage"):
+        score += 3
+    if spdx:
+        score += 4                                     # 有明确许可证加分（程序员关心商用/依赖合规）
+    else:
+        score -= 4
+
+    # 活跃度：近期有推送
+    pushed = r.get("pushed_at", "")
+    if pushed:
+        try:
+            pd = datetime.fromisoformat(pushed.replace("Z", "+00:00"))
+            days = (_now() - pd).days
+            if days <= 30:
+                score += 6
+            elif days <= 180:
+                score += 3
+            elif days > 365:
+                score -= 8
+        except Exception:
+            pass
+
+    # 新鲜度新建项目
+    created = r.get("created_at", "")
+    if created:
+        try:
+            cd = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            if (_now() - cd).days <= sc.get("fresh_bonus_days", 7):
+                score += 5
+        except Exception:
+            pass
+
+    score = round(max(0.0, min(100.0, score)), 1)
+    source = r.get("_source", "trending")
+    return {
+        "full_name": name,
+        "name": r.get("name", name.split("/")[-1]),
+        "owner": (r.get("owner") or {}).get("login", name.split("/")[0]),
+        "url": r.get("html_url", f"https://github.com/{name}"),
+        "homepage": r.get("homepage") or "",
+        "description": desc.strip(),
+        "stars": stars,
+        "forks": r.get("forks_count", 0),
+        "language": r.get("language") or "",
+        "license": spdx,
+        "platforms": "",  # 程序员版不展示"手机/网页"这种维度
+        "topics": topics[:8],
+        "created_at": created,
+        "pushed_at": pushed,
+        "category": category,
+        "category_label": DEV_CATEGORY_LABEL.get(category, "🧰 综合"),
+        "difficulty": "中",  # 程序员版不强调"上手难度"，报告里改展示别的
+        "score": score,
+        "stars_growth": growth,
+        "growth_period": period,
+        "source": source,
+        "positive_hits": positive_hits,
+        "fresh": bool(created and created[:10] >= _iso(sc.get("fresh_bonus_days", 7))),
+    }
+
+
+def build_queries_dev(cfg: dict) -> list[tuple[str, str, list[str]]]:
+    """程序员版搜索通道的查询式（补充 Trending 之外的近期高星新项目）。"""
+    s = cfg["search"]
+    keywords = cfg["keywords"]
+    since = _iso(s["lookback_days"])
+    min_s = s["min_stars"]
+    rotation = datetime.now().toordinal()
+    items = [(cat, words) for cat, words in keywords.items()
+             if not cat.startswith("_") and words]
+    queries: list[tuple[str, str, list[str]]] = []
+    for category, words in items:
+        phrase = words[rotation % len(words)]
+        terms = _terms_for(phrase)
+        queries.append((f"{terms[0]} created:>{since} stars:>={min_s}", category, terms))
+    return queries[: s["max_queries_per_run"]]

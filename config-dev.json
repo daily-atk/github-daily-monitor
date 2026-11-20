@@ -1,0 +1,100 @@
+{
+  "_notes": "程序员排行榜版配置。用 python monitor.py --profile dev run 运行。所有输出与普通人版隔离。以 _ 开头的键只是说明，程序会忽略。",
+  "version": 1,
+  "mode": "developer",
+
+  "schedule": {
+    "_comment": "与普通人版错开时间，避免两个榜单同一时刻发布",
+    "summary_time": "20:30",
+    "timezone": "Asia/Shanghai"
+  },
+
+  "trending": {
+    "_comment": "程序员榜主数据源：GitHub Trending 页面。period=daily(日榜)/weekly(周榜)；count=抓取条数；enrich_with_api=是否调用 GitHub API 补充 topics/许可证/更新时间(走 core 额度,带缓存)",
+    "enabled": true,
+    "period": "daily",
+    "count": 25,
+    "request_delay_seconds": 2,
+    "enrich_with_api": true
+  },
+
+  "search": {
+    "_comment": "补充通道：按关键词搜近期新建的高星开发者项目，与 Trending 合并去重。min_stars 比普通人版高。",
+    "lookback_days": 14,
+    "updated_lookback_days": 3,
+    "min_stars": 300,
+    "max_stars": 200000,
+    "results_per_query": 30,
+    "sort_by": ["stars", "updated"],
+    "request_delay_seconds": 7,
+    "max_queries_per_run": 6
+  },
+
+  "_keyword_guide": "程序员版按技术方向分组。search 通道每天轮换代表词；Trending 通道不依赖这些词，抓的是全站真实上升榜。可自由增删领域和词条。",
+  "keywords": {
+    "AI/LLM": ["llm framework", "ai agent", "rag", "vector database", "inference engine", "fine-tuning"],
+    "开发工具": ["developer tool", "code editor", "ide plugin", "debugger", "terminal tool", "git tool"],
+    "框架/库": ["web framework", "ui library", "state management", "orm", "http client"],
+    "数据库/存储": ["database", "key value store", "search engine", "analytics database", "embedding store"],
+    "DevOps/ infra": ["kubernetes tool", "observability", "ci cd", "deployment tool", "monitoring"],
+    "安全": ["security tool", "penetration testing", "password manager", "network scanner"],
+    "前端": ["react component", "vue library", "css framework", "build tool", "bundler"],
+    "系统/语言": ["programming language", "compiler", "operating system", "runtime", "shell"]
+  },
+
+  "extra_queries": [],
+
+  "exclude_words": {
+    "_comment": "程序员版放宽 name 排除（框架/库本身就是要推荐的对象），只挡教程/资源汇总类",
+    "name": ["awesome-", "awesome ", "list-of", "collection-of", "tutorial", "course", "interview", "roadmap", "cheat-sheet", "资源汇总", "学习路线", "面试", "教程", "导航", "curated", "bookmarks"],
+    "description": ["Just for fun", "study project", "demo project", "练习项目", "课程作业", "毕业设计", "仅供学习"],
+    "topics": ["awesome-list", "tutorial", "interview-preparation"]
+  },
+
+  "filters": {
+    "_comment": "程序员版降低描述长度门槛，允许纯技术项目；min_size_kb 放宽",
+    "require_description": true,
+    "min_description_length": 15,
+    "max_fork_ratio": 0.9,
+    "exclude_archived": true,
+    "exclude_disabled": true,
+    "min_size_kb": 10
+  },
+
+  "scoring": {
+    "_comment": "程序员版打分：min_score 放宽；max_per_domain=0 不限额(技术榜按热度排)；domain_weight 全 1.0",
+    "top_n": 15,
+    "min_score": 30,
+    "max_per_domain": 0,
+    "domain_weight": {},
+    "fresh_bonus_days": 7,
+    "growth_weight": 1.0
+  },
+
+  "dedup": {
+    "_comment": "程序员榜冷却期短一些（技术热点变化快），独立 history 文件",
+    "cooldown_days": 14,
+    "seen_cooldown_days": 3,
+    "persist_since_first_seen": true,
+    "history_file": "data-dev/history.json"
+  },
+
+  "output": {
+    "_comment": "程序员版输出到独立目录，报告文件名带 dev 前缀避免与普通人版冲突",
+    "formats": ["md", "html"],
+    "reports_dir": "reports-dev",
+    "candidates_file": "data-dev/candidates_latest.json",
+    "enriched_file": "data-dev/enriched_latest.json",
+    "keep_reports_days": 90,
+    "file_prefix": "dev-daily"
+  },
+
+  "run_log_file": "data-dev/run.log",
+
+  "analytics": {
+    "_comment": "与普通人版可共用同一统计域名，也可单独配置",
+    "provider": "off"
+  },
+
+  "github_token_env": "GITHUB_TOKEN"
+}

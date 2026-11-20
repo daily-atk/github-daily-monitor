@@ -23,10 +23,14 @@ from lib.github_client import GitHubClient
 from lib.pipeline import (
     build_queries, filter_low_quality, score_repo, dedup_and_select,
     update_history, normalize_history, _matches_terms,
+    score_repo_dev, build_queries_dev,
 )
+from lib.trending import TrendingClient
 from lib.reporter import build_report_data, save_reports, validate_enriched
 
 LOG_MAX_BYTES = 1_000_000
+# 当前 profile 的运行日志路径（由 main() 根据配置设置）
+_LOG_PATH = "data/run.log"
 
 
 def today_str() -> str:
@@ -34,9 +38,9 @@ def today_str() -> str:
 
 
 def log(msg: str) -> None:
-    """把运行过程写进 data/run.log，方便排查定时任务失败。"""
+    """把运行过程写进运行日志，方便排查定时任务失败。"""
     try:
-        p = root_path("data/run.log")
+        p = root_path(_LOG_PATH)
         p.parent.mkdir(parents=True, exist_ok=True)
         if p.exists() and p.stat().st_size > LOG_MAX_BYTES:
             backup = p.with_suffix(".log.1")
@@ -53,8 +57,8 @@ def log(msg: str) -> None:
         pass
 
 
-def load_history() -> dict:
-    p = root_path("data/history.json")
+def load_history(cfg: dict) -> dict:
+    p = root_path(cfg["dedup"]["history_file"])
     history = {"records": {}, "updated_at": None, "total_tracked": 0}
     if p.exists():
         try:
@@ -63,13 +67,13 @@ def load_history() -> dict:
             print(f"[警告] 历史文件读取失败，将重新开始：{e}", file=sys.stderr)
             log(f"history load failed: {e}")
     if normalize_history(history):
-        save_history(history)
+        save_history(history, cfg)
         log("history normalized: added last_seen for old records")
     return history
 
 
-def save_history(h: dict) -> None:
-    p = root_path("data/history.json")
+def save_history(h: dict, cfg: dict) -> None:
+    p = root_path(cfg["dedup"]["history_file"])
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(h, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -99,15 +103,35 @@ def do_collect(cfg: dict, verbose: bool = True, force: bool = False) -> dict:
 
     s = cfg["search"]
     token = os.environ.get(cfg.get("github_token_env") or "GITHUB_TOKEN") or ""
+    is_dev = cfg.get("mode") == "developer"
+    all_repos: list[dict] = []
+    categories: dict[str, str] = {}
+
+    # 程序员版：Trending 榜单是主数据源（真实的今日/本周新增 star）
+    if is_dev and cfg.get("trending", {}).get("enabled"):
+        tr = cfg["trending"]
+        tc = TrendingClient(
+            period=tr.get("period", "daily"), delay=tr.get("request_delay_seconds", 2),
+            token=token, enrich_with_api=tr.get("enrich_with_api", True),
+        )
+        if verbose:
+            print(f"[采集] GitHub Trending {tr.get('period','daily')} 榜，抓取 {tr.get('count',25)} 条...")
+        trending = tc.fetch(count=tr.get("count", 25))
+        for it in trending:
+            categories.setdefault(it["full_name"], "Trending")
+            all_repos.append(it)
+        if verbose:
+            print(f"[采集] Trending 拿到 {len(trending)} 条（API 补元数据 {tc.request_count} 次，"
+                  f"缓存 {tc.cache_hits} 次）")
+        log(f"trending fetched={len(trending)} requests={tc.request_count} cache={tc.cache_hits}")
+
     client = GitHubClient(token=token, delay=s["request_delay_seconds"])
-    queries = build_queries(cfg)
-    log(f"collect start: {len(queries)} queries, token={'yes' if client.token else 'no'}")
+    queries = build_queries_dev(cfg) if is_dev else build_queries(cfg)
+    log(f"collect start: {len(queries)} queries, token={'yes' if client.token else 'no'}, dev={is_dev}")
     if verbose:
         print(f"[采集] 共 {len(queries)} 个搜索式，请求间隔 {s['request_delay_seconds']}s，"
               f"{'已检测到 Token' if client.token else '未配置 Token（额度较低）'}")
 
-    all_repos: list[dict] = []
-    categories: dict[str, str] = {}
     for i, (q, cat, required) in enumerate(queries, 1):
         if verbose:
             print(f"  ({i}/{len(queries)}) [{cat}] {q[:70]}...")
@@ -128,9 +152,15 @@ def do_collect(cfg: dict, verbose: bool = True, force: bool = False) -> dict:
               f"(无描述 {fstats['by_no_desc']}, 排除词 {fstats['by_exclude_name'] + fstats['by_exclude_desc']}, "
               f"星标 {fstats['by_stars']}, 体积 {fstats['by_size']}, fork比 {fstats['by_fork_ratio']})")
 
-    scored = [score_repo(r, categories.get(r["full_name"], "综合"), cfg) for r in kept]
-    history = load_history()
-    selected, dstats = dedup_and_select(scored, cfg, history)
+    scorer = score_repo_dev if is_dev else score_repo
+    scored = [scorer(r, categories.get(r["full_name"], "Trending" if is_dev else "综合"), cfg)
+              for r in kept]
+    # 程序员榜按热度（新增 star）优先排序，而不是普通人版的价值分
+    if is_dev:
+        scored.sort(key=lambda x: (-(x.get("stars_growth") or 0), -x["score"], -x["stars"]))
+
+    history = load_history(cfg)
+    selected, dstats = dedup_and_select(scored, cfg, history, by_growth=is_dev)
     if verbose:
         print(f"[去重] 推荐冷却跳过 {dstats['in_cooldown']}，近期见过 {dstats['recent_seen']}，"
               f"最终入选 {dstats['selected']}")
@@ -162,12 +192,16 @@ def do_collect(cfg: dict, verbose: bool = True, force: bool = False) -> dict:
     if verbose and selected:
         print("[候选] Top 列表：")
         for it in selected:
-            print(f"   #{it['score']:>5} [{it['category']}] {it['full_name']} ⭐{it['stars']}")
+            if is_dev:
+                print(f"   +{it.get('stars_growth',0):>5}/{'日' if it.get('growth_period')=='daily' else '周'} "
+                      f"[{it['category']}] {it['full_name']} ⭐{it['stars']}")
+            else:
+                print(f"   #{it['score']:>5} [{it['category']}] {it['full_name']} ⭐{it['stars']}")
 
     # 把本次见到的项目记入历史（只在首次见到时记录，避免每天重复出现在候选池）
     if cfg["dedup"].get("persist_since_first_seen", True):
         update_history(history, selected, payload["all_seen"])
-        save_history(history)
+        save_history(history, cfg)
 
     log(f"collect done: raw={fstats['total_raw']} kept={fstats['kept']} "
         f"selected={dstats['selected']} requests={client.request_count} cache={client.cache_hits}")
@@ -199,7 +233,7 @@ def do_report(cfg: dict, verbose: bool = True) -> list[Path]:
 
 
 def do_stats(cfg: dict) -> None:
-    h = load_history()
+    h = load_history(cfg)
     recs = h.get("records", {})
     recommended = sum(1 for r in recs.values() if isinstance(r, dict) and r.get("times_recommended", 0) > 0)
     print(f"历史库共追踪 {len(recs)} 个项目，其中已推荐过 {recommended} 个")
@@ -232,14 +266,20 @@ def do_validate(cfg: dict, verbose: bool = True) -> int:
 def main() -> None:
     ap = argparse.ArgumentParser(description="每日 GitHub 实用项目监测助手")
     ap.add_argument("cmd", choices=["collect", "report", "run", "stats", "validate"])
+    ap.add_argument("--profile", default="consumer", choices=["consumer", "dev"],
+                    help="consumer=普通人版(默认), dev=程序员排行榜版")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--force", action="store_true",
                     help="即使今天已有非空候选也重新采集并覆盖")
     args = ap.parse_args()
-    log(f"=== start {args.cmd} ===")
 
+    global _LOG_PATH
     try:
-        cfg = load_config()
+        cfg = load_config(profile=args.profile)
+        _LOG_PATH = cfg.get("run_log_file") or (
+            "data-dev/run.log" if args.profile == "dev" else "data/run.log"
+        )
+        log(f"=== start {args.cmd} (profile={args.profile}) ===")
         verbose = not args.quiet
         if args.cmd == "collect":
             do_collect(cfg, verbose, force=args.force)
@@ -264,7 +304,7 @@ def main() -> None:
     except Exception:
         tb = traceback.format_exc()
         log("ERROR\n" + tb)
-        print("\n[运行出错] 详细信息已写入 data/run.log，可把最后 20 行发给维护者。\n",
+        print(f"\n[运行出错] 详细信息已写入 {_LOG_PATH}，可把最后 20 行发给维护者。\n",
               file=sys.stderr)
         print(tb, file=sys.stderr)
         sys.exit(1)

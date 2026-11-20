@@ -6,7 +6,14 @@
 
 每天自动从 GitHub 捞出「对普通人真正有用」的新项目 / 有重要更新的项目，筛选后生成一份简洁总结（Markdown + HTML），按推荐优先级排序。**同一项目 30 天内不重复推荐。**
 
-**在线看今日日报** → [daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/)（打开网页即可，无需安装任何东西）
+同一套代码提供**两个版本**，共用一份程序、配置与数据完全隔离：
+
+| 版本 | 面向谁 | 排序依据 | 站点入口 |
+|---|---|---|---|
+| 📚 **普通人版**（默认） | 不写代码的人 | 对学习/生活/效率/健康/财务的实用价值 | 站点首页 |
+| 🔥 **程序员热度榜** | 开发者、技术选型 | GitHub Trending 真实**新增 star** | 站点 `dev/` 页 |
+
+**在线看两个榜单** → [daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/)（打开网页即可，无需安装任何东西；页面顶部可切换两版）
 
 ## 快速开始
 
@@ -33,6 +40,34 @@ chmod +x run.sh
 ![每日报告截图](docs/screenshot.png)
 
 在线 Demo：**[daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/)** —— 每天 20:00 自动更新，可直接分享给朋友。（在自己仓库启用 Pages 的方法见下文。）
+
+## 两个版本
+
+一份代码，两种受众。切换只需加 `--profile dev`，两版的配置、候选、去重库、报告目录各自独立，互不干扰。
+
+**程序员热度榜**（`--profile dev`）的特点：
+
+- 数据源是 **GitHub Trending 日榜**（可在 `config-dev.json` 改周榜），抓的是真实的「今日新增 star」，这是普通搜索 API 拿不到的热度信号。
+- 排序按热度优先，开发者向信号（框架、库、SDK、LLM、数据库等）在这里是**加分项**，与普通人版正好相反。
+- 补充 API 拿到的 topics / 许可证 / 最近更新（有缓存、自动降级），帮开发者快速判断技术栈和维护状态。
+- 深色主题、榜单式排版，突出增长数字。
+
+```bash
+# 程序员热度榜：采集 + 生成（普通人版命令不变）
+python monitor.py --profile dev run
+
+# 只看/重生成程序员榜报告
+python monitor.py --profile dev report
+
+# 生成带双入口导航的归档首页（本地预览两个榜单）
+python tools/build_index.py site --all
+```
+
+- 配置：`config-dev.json`（领域关键词、Trending 周期/条数、冷却期等都能改）。
+- 输出：`reports-dev/`、`data-dev/`，与普通人版的 `reports/`、`data/` 完全分开。
+- 想给程序员榜也加 AI 文案？它读的是 `data-dev/enriched_latest.json`，字段同普通人版（见 `AI_WORKFLOW.md`）；不加就用技术视角的兜底文案。
+
+> 线上演示站每天 20:00 同时更新两个榜单：普通人版在首页，程序员榜在 `dev/` 页，顶部导航可切换。
 
 ## 它怎么工作
 
@@ -65,10 +100,11 @@ python enrich.py --enable --max-cost 0.05
 
 | 文件                                  | 作用                                                  |
 | ----------------------------------- | --------------------------------------------------- |
-| `config.json`                       | **用户配置**：关键词、排除词、时间、阈值、Top N、输出格式                   |
+| `config.json`                       | 普通人版配置：关键词、排除词、时间、阈值、Top N、输出格式                   |
+| `config-dev.json`                   | 程序员榜配置：Trending 周期/条数、技术关键词、独立输出路径                  |
 | `monitor.py`                        | 主程序（collect / report / run / stats / validate 五个命令） |
 | `enrich.py`                         | 可选的 AI 文案增强（OpenAI 兼容，默认关闭）                         |
-| `lib/`                              | 采集、过滤、打分、报告生成模块                                     |
+| `lib/`                              | 采集、过滤、打分、报告生成模块（`trending.py` 为程序员榜数据源）            |
 | `tools/build_index.py`              | 生成历史归档索引页                                           |
 | `AI_WORKFLOW.md`                    | 每日自动化 AI 的执行说明（作业指导书）                               |
 | `README.en.md`                      | 英文说明                                                |
@@ -82,6 +118,7 @@ python enrich.py --enable --max-cost 0.05
 | `data/candidates_latest.json`       | 最新候选数据                                              |
 | `data/enriched_latest.json`         | AI 增强数据（可选，由 AI 生成）                                 |
 | `data/enriched_latest.example.json` | AI 增强数据格式示例                                         |
+| `data-dev/`、`reports-dev/`         | 程序员榜的独立数据与输出目录                                       |
 | `tests/`                            | 单元测试（标准库 unittest，不发真实 API 请求）                      |
 | `.github/workflows/ci.yml`          | GitHub Actions：语法检查 + 单元测试                          |
 | `.github/workflows/daily.yml`       | GitHub Actions：每日定时运行并发布到 GitHub Pages              |
@@ -100,7 +137,13 @@ python monitor.py stats      # 查看历史去重库统计
 python monitor.py validate   # 校验 AI 增强数据是否与当日候选一致
 python enrich.py --dry-run   # 查看 AI 增强 prompt 与预估费用（不发请求）
 python enrich.py --enable    # 调用 LLM 生成增强数据（可选）
-python tools/build_index.py site   # 生成历史归档索引页
+python tools/build_index.py site   # 生成普通人版归档索引页
+python tools/build_index.py site --all   # 生成两版归档页（带切换导航）
+
+# —— 程序员热度榜（所有命令加 --profile dev）——
+python monitor.py --profile dev run       # 程序员榜：Trending 采集+报告
+python monitor.py --profile dev report    # 只重生成程序员榜报告
+python monitor.py --profile dev stats     # 程序员榜去重库统计
 python -m unittest discover -s tests -v   # 运行单元测试
 ```
 

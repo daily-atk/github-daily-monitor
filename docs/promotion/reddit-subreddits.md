@@ -39,7 +39,7 @@ A few details:
 - Markdown + self-contained HTML report
 - optional OpenAI-compatible enrichment, off by default
 - GitHub Actions + Pages for daily publishing
-- Python 3.10+ standard library only, 42 tests, MIT
+- Python 3.10+ standard library only, 52 tests, MIT
 
 Repo: https://github.com/daily-atk/github-daily-monitor
 Demo: https://daily-atk.github.io/github-daily-monitor/
@@ -143,7 +143,7 @@ I open-sourced GitHub Daily Monitor, a small tool that turns GitHub into a daily
 
 - MIT licensed
 - Python 3.10+, standard library only
-- 42 unit tests + GitHub Actions CI
+- 52 unit tests + GitHub Actions CI
 - Optional GitHub Actions workflow that publishes the report and an archive to Pages
 - Optional AI enrichment, off by default
 
