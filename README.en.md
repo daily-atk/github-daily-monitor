@@ -6,6 +6,8 @@
 
 [中文说明](README.md) ｜ **English**
 
+**See today's digest** → [daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/) — updated daily, no install needed.
+
 ## Why this exists
 
 GitHub Trending and curated newsletters are great for developers. But most "useful project" lists are still written for people who already know what a repository, a framework, or a CLI is.

@@ -2,35 +2,29 @@
 
 [English](README.en.md) ｜ **中文**
 
+> **给普通人的每日 GitHub 实用项目日报** —— 别人推荐"开发者觉得酷"的项目，这里只挑"普通人真能用上"的工具，每天 20:00 自动更新。
+
 每天自动从 GitHub 捞出「对普通人真正有用」的新项目 / 有重要更新的项目，筛选后生成一份简洁总结（Markdown + HTML），按推荐优先级排序。**同一项目 30 天内不重复推荐。**
 
-> **English**: github-daily-monitor.
+**在线看今日日报** → [daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/)（打开网页即可，无需安装任何东西）
 
 ## 快速开始
 
-### Windows
+### 只想每天看看日报（零门槛）
 
-双击 **`运行日报.bat`**。首次使用先按 [`新手使用说明.md`](新手使用说明.md) 安装 Python（勾选 **Add python.exe to PATH**）。
+直接打开 **[在线日报](https://daily-atk.github.io/github-daily-monitor/)**，无需安装、无需命令行。想自己掌控数据或改监测关键词，再看下面的本地运行方式。
+
+### Windows：双击运行
+
+双击 **`运行日报.bat`** —— 自动采集 + 生成报告，完成后打开最新 HTML；只想看已生成的报告就双击 **`打开今日报告.bat`**。首次使用先按 [`新手使用说明.md`](新手使用说明.md) 安装 Python（勾选 **Add python.exe to PATH**）。
 
 ### macOS / Linux
 
 ```bash
 chmod +x run.sh
-./run.sh
+./run.sh              # 生成日报并打开
+./run.sh --force      # 忽略当天已有候选，强制重新采集
 ```
-
-如果希望强制忽略当天已有候选、重新采集：
-
-```bash
-./run.sh --force
-```
-
-## 不想用命令行？
-
-双击项目根目录下的：
-
-- **`运行日报.bat`** —— 立即采集 + 生成报告，结束后自动打开最新 HTML
-- **`打开今日报告.bat`** —— 直接打开最新一份报告
 
 更详细的零基础说明见 [`新手使用说明.md`](新手使用说明.md)。
 
@@ -38,7 +32,7 @@ chmod +x run.sh
 
 ![每日报告截图](docs/screenshot.png)
 
-在线 Demo：部署 GitHub Pages 后访问 `https://daily-atk.github.io/github-daily-monitor/`（配置见下文）。
+在线 Demo：**[daily-atk.github.io/github-daily-monitor](https://daily-atk.github.io/github-daily-monitor/)** —— 每天 20:00 自动更新，可直接分享给朋友。（在自己仓库启用 Pages 的方法见下文。）
 
 ## 它怎么工作
 
@@ -170,7 +164,7 @@ export GITHUB_TOKEN="ghp_你的token"
 
 1. 在 Actions 里手动运行一次 **Daily Digest**；
 2. 仓库 **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**，分支选 **gh-pages** / root，保存；
-3. 访问 `https://daily-atk.github.io/github-daily-monitor/`。
+3. 访问 [https://daily-atk.github.io/github-daily-monitor/](https://daily-atk.github.io/github-daily-monitor/)。
 
 可以本地预览归档页：
 
