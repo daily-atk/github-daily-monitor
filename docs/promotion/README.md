@@ -2,6 +2,8 @@
 
 按你选定的渠道整理，所有文案都可以直接复制使用。发布前请先确认目标读者能打开 Demo。
 
+> **网络限制（2026-11-20）**：V2EX、Reddit、Hacker News、Product Hunt、Twitter/X 在当前网络环境无法稳定访问，已全部暂缓，**不要按旧顺序发这些**。当前只做能访问的五个平台：少数派、掘金、知乎、小红书、即刻（HelloGitHub 走 GitHub Issue，可正常投）。完整执行顺序见 [`PROMOTION_PLAN.md`](../PROMOTION_PLAN.md)。
+
 ## 文件
 
 | 渠道 | 文件 | 形式 | 备注 |
@@ -18,14 +20,16 @@
 
 另见 [`docs/launch/`](../launch/) 里的 V2EX、少数派、Reddit 通用稿和即刻可用素材。
 
-## 推荐顺序
+## 推荐顺序（中文单线版）
 
 | 周 | 动作 |
 |---|---|
-| 第 1 周 | HelloGitHub 投稿 + 掘金技术文（先建立可信度） |
-| 第 2 周 | Reddit（r/Python → r/github）+ HN Show HN |
-| 第 3 周 | Product Hunt + Twitter thread |
+| 第 1 周 | 少数派首发 + 掘金技术文（先建立可信度） |
+| 第 2 周 | HelloGitHub 投稿 + 知乎长文 |
+| 第 3 周 | 小红书 / 即刻日更启动 |
 | 持续 | 小红书/知乎/即刻日更；每期日报同步一条短内容 |
+
+> 受限渠道（V2EX / Reddit / HN / PH / X）文案保留在文件里，等网络允许再发，不要删。掘金文案里的 Gitee 镜像步骤当前跳过。
 
 ## 发布前统一检查
 
