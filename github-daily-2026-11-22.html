@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日 GitHub 实用项目速递 · 2026-11-22</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1f2328;--mut:#5b6572;--line:#e5e8ec;--brand:#2563eb;--accent:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:32px 18px 60px}
+header{text-align:center;padding:18px 0 26px}
+h1{font-size:27px;margin:0 0 8px}
+.sub{color:var(--mut);font-size:14px}
+.summary{background:#eef2ff;border:1px solid #dbe3ff;border-radius:14px;padding:14px 18px;margin:18px 0 26px;color:#33417a;font-size:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#fafbfc;color:var(--mut);font-weight:600}
+a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-top{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.rank{background:var(--ink);color:#fff;border-radius:8px;padding:2px 9px;font-weight:700;font-size:13px}
+.cat{background:#eef2ff;color:#4338ca;border-radius:20px;padding:2px 11px;font-size:12px}
+.diff{margin-left:auto;font-size:12px;border-radius:20px;padding:2px 11px}
+.diff.easy{background:#dcfce7;color:#166534} .diff.medium{background:#fef3c7;color:#92400e} .diff.hard{background:#fee2e2;color:#991b1b}
+.card h2{font-size:19px;margin:0 0 2px} .repo{color:var(--mut);font-size:12px;margin-bottom:12px}
+.features{margin:0 0 14px;color:#30363d}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.cell{background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:13px}
+.cell.full{grid-column:1/-1} .k{display:block;color:var(--mut);font-size:12px;margin-bottom:3px} .v{color:#25292e}
+.tags{margin:6px 0 12px} .tag{display:inline-block;background:#f1f5f9;color:#475569;border-radius:6px;padding:1px 8px;font-size:11px;margin:0 5px 5px 0}
+.foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px;font-size:13px}
+.metrics{display:flex;gap:14px;color:var(--mut)} .links{display:flex;gap:14px}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:36px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.foot{flex-direction:column;gap:10px}}
+</style></head><body><div class="wrap">
+<header><h1>🛰️ 每日 GitHub 实用项目速递</h1><div class="sub">2026-11-22 · 为普通人筛选的真有用项目</div></header>
+<div class="summary">今日从 GitHub 筛选出 <b>10</b> 个对普通人真正有用的项目，按推荐优先级排序。<br>只看「能不能帮到学习 / 生活 / 效率 / 健康 / 财务」，不堆开发者玩具。</div>
+<table><thead><tr><th>#</th><th>项目</th><th>领域</th><th>推荐分</th></tr></thead><tbody><tr><td>1</td><td><a href='#1'>CPA-Manager-Plus</a></td><td>💪 健康</td><td>80.2</td></tr><tr><td>2</td><td><a href='#2'>dreeve</a></td><td>💪 健康</td><td>76.1</td></tr><tr><td>3</td><td><a href='#3'>Minus</a></td><td>💰 财务</td><td>75.8</td></tr><tr><td>4</td><td><a href='#4'>Stablecoin-Payment-Gateway</a></td><td>💰 财务</td><td>71.6</td></tr><tr><td>5</td><td><a href='#5'>sim</a></td><td>⚡ 效率</td><td>69.0</td></tr><tr><td>6</td><td><a href='#6'>budibase</a></td><td>⚡ 效率</td><td>67.3</td></tr><tr><td>7</td><td><a href='#7'>activepieces</a></td><td>⚡ 效率</td><td>62.9</td></tr><tr><td>8</td><td><a href='#8'>gatus</a></td><td>💪 健康</td><td>60.0</td></tr><tr><td>9</td><td><a href='#9'>agent-loop-visualizer</a></td><td>📚 学习</td><td>59.7</td></tr><tr><td>10</td><td><a href='#10'>ChatterBot</a></td><td>📚 学习</td><td>59.2</td></tr></tbody></table>
+
+        <article class="card" id="1">
+          <div class="card-top">
+            <span class="rank">#1</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/seakee/CPA-Manager-Plus" target="_blank" rel="noopener">CPA-Manager-Plus</a></h2>
+          <div class="repo">seakee/CPA-Manager-Plus</div>
+          <p class="features">A self-hosted CPA / CLIProxyAPI management panel and AI gateway observability dashboard for requests, usage, cost, quota, failures…</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；关注健康习惯的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「ai-gateway、claude-code」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-21 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#ai-gateway</span><span class="tag">#claude-code</span><span class="tag">#cliproxyapi</span><span class="tag">#codex</span><span class="tag">#cost-analysis</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 4,099</span><span>🍴 463</span><span>Go</span></div>
+            <div class="links"><a href="https://github.com/seakee/CPA-Manager-Plus" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://cpamp.seakee.dev/" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="2">
+          <div class="card-top">
+            <span class="rank">#2</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/dreeveapp/dreeve" target="_blank" rel="noopener">dreeve</a></h2>
+          <div class="repo">dreeveapp/dreeve</div>
+          <p class="features">Dreeve is a self-hosted, open-source dashboard for your sports and fitness data</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；关注健康习惯的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「fitness、health」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-22 · AGPL-3.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#fitness</span><span class="tag">#health</span><span class="tag">#open-source</span><span class="tag">#self-hosted</span><span class="tag">#statistics</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 2,220</span><span>🍴 147</span><span>PHP</span></div>
+            <div class="links"><a href="https://github.com/dreeveapp/dreeve" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://dreeve.app" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="3">
+          <div class="card-top">
+            <span class="rank">#3</span>
+            <span class="cat">💰 财务</span>
+            <span class="diff easy">🟢 低（开箱即用）</span>
+          </div>
+          <h2><a href="https://github.com/isaacsa51/Minus" target="_blank" rel="noopener">Minus</a></h2>
+          <div class="repo">isaacsa51/Minus</div>
+          <p class="features">Register, calculate and make reminders for your recurring expenses alongside credit card due dates.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想直接在手机上使用的人；想管好收支和预算的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把收支、预算和资产集中到一处查看，少维护几张表格。主要围绕「android、budget」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">手机</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-20 · Apache-2.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#android</span><span class="tag">#budget</span><span class="tag">#clean-arch</span><span class="tag">#clean-architechture</span><span class="tag">#clean-architecture-android</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 314</span><span>🍴 18</span><span>Kotlin</span></div>
+            <div class="links"><a href="https://github.com/isaacsa51/Minus" target="_blank" rel="noopener">GitHub ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="4">
+          <div class="card-top">
+            <span class="rank">#4</span>
+            <span class="cat">💰 财务</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/zgraham1981/Stablecoin-Payment-Gateway" target="_blank" rel="noopener">Stablecoin-Payment-Gateway</a></h2>
+          <div class="repo">zgraham1981/Stablecoin-Payment-Gateway</div>
+          <p class="features">Self-hosted, non-custodial stablecoin payment gateway with x402 and invoice checkout.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；想管好收支和预算的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把收支、预算和资产集中到一处查看，少维护几张表格。主要围绕「coinbase-x402、coinpayments-api」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-22 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#coinbase-x402</span><span class="tag">#coinpayments-api</span><span class="tag">#crypto-payment-system</span><span class="tag">#cryptopayments</span><span class="tag">#e-wallet</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 270</span><span>🍴 42</span><span>Python</span></div>
+            <div class="links"><a href="https://github.com/zgraham1981/Stablecoin-Payment-Gateway" target="_blank" rel="noopener">GitHub ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="5">
+          <div class="card-top">
+            <span class="rank">#5</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/simstudioai/sim" target="_blank" rel="noopener">sim</a></h2>
+          <div class="repo">simstudioai/sim</div>
+          <p class="features">Sim is the collaborative workspace to build, deploy, and monitor AI agents and workflows.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">被任务、时间与注意力困扰，想要更自律的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「agent-workflow、agentic-workflow」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">—</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-22 · Apache-2.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#agent-workflow</span><span class="tag">#agentic-workflow</span><span class="tag">#agents</span><span class="tag">#ai</span><span class="tag">#aiagents</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 30,175</span><span>🍴 3,917</span><span>TypeScript</span></div>
+            <div class="links"><a href="https://github.com/simstudioai/sim" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://www.sim.ai" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="6">
+          <div class="card-top">
+            <span class="rank">#6</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/Budibase/budibase" target="_blank" rel="noopener">budibase</a></h2>
+          <div class="repo">Budibase/budibase</div>
+          <p class="features">AI agents, automations and apps that run your operations.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">被任务、时间与注意力困扰，想要更自律的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「ai-app-builder、ai-applications」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">—</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-20 · 未标注</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；未标注开源许可证，商用前请自行确认；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#ai-app-builder</span><span class="tag">#ai-applications</span><span class="tag">#crud-app</span><span class="tag">#crud-application</span><span class="tag">#data-application</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 28,433</span><span>🍴 2,238</span><span>TypeScript</span></div>
+            <div class="links"><a href="https://github.com/Budibase/budibase" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://budibase.com" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="7">
+          <div class="card-top">
+            <span class="rank">#7</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/activepieces/activepieces" target="_blank" rel="noopener">activepieces</a></h2>
+          <div class="repo">activepieces/activepieces</div>
+          <p class="features">AI Agents &amp; MCPs &amp; AI Workflow Automation • (~400 MCP servers for AI agents) • AI Automation / AI Agent with MCPs • AI Workflows &amp; AI…</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「ai-agent、ai-agent-tools」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">—</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-22 · 未标注</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；未标注开源许可证，商用前请自行确认；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#ai-agent</span><span class="tag">#ai-agent-tools</span><span class="tag">#ai-agents</span><span class="tag">#ai-agents-framework</span><span class="tag">#mcp</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 25,675</span><span>🍴 4,492</span><span>TypeScript</span></div>
+            <div class="links"><a href="https://github.com/activepieces/activepieces" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://www.activepieces.com" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="8">
+          <div class="card-top">
+            <span class="rank">#8</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff hard">🔴 高（需技术背景）</span>
+          </div>
+          <h2><a href="https://github.com/TwiN/gatus" target="_blank" rel="noopener">gatus</a></h2>
+          <div class="repo">TwiN/gatus</div>
+          <p class="features">Automated developer-oriented status page with alerting and incident support</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；关注健康习惯的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「alerting、container」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-21 · Apache-2.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#alerting</span><span class="tag">#container</span><span class="tag">#dashboard</span><span class="tag">#devops</span><span class="tag">#docker</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 12,861</span><span>🍴 922</span><span>Go</span></div>
+            <div class="links"><a href="https://github.com/TwiN/gatus" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://gatus.io" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="9">
+          <div class="card-top">
+            <span class="rank">#9</span>
+            <span class="cat">📚 学习</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/Agentic-System-Lab/agent-loop-visualizer" target="_blank" rel="noopener">agent-loop-visualizer</a></h2>
+          <div class="repo">Agentic-System-Lab/agent-loop-visualizer</div>
+          <p class="features">This project is for learning: it shows how an agent loop works underneath, in a way more intuitive and visual than reading about it.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">学生、老师或培训组织者</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把学习计划、笔记和复习串起来，减少临时抱佛脚。主要围绕「agent-loop、ai-agents」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">—</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-07 · Apache-2.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#agent-loop</span><span class="tag">#ai-agents</span><span class="tag">#education</span><span class="tag">#function-calling</span><span class="tag">#gemma</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 57</span><span>🍴 3</span><span>Python</span></div>
+            <div class="links"><a href="https://github.com/Agentic-System-Lab/agent-loop-visualizer" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://agentic-system-lab.github.io/agent-loop-visualizer/" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="10">
+          <div class="card-top">
+            <span class="rank">#10</span>
+            <span class="cat">📚 学习</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/gunthercox/ChatterBot" target="_blank" rel="noopener">ChatterBot</a></h2>
+          <div class="repo">gunthercox/ChatterBot</div>
+          <p class="features">ChatterBot is a machine learning, conversational dialog engine for creating chat bots</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想提升学习效率、管理知识和笔记的普通人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把学习计划、笔记和复习串起来，减少临时抱佛脚。主要围绕「bot、chatbot」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">—</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-21 · BSD-3-Clause</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#bot</span><span class="tag">#chatbot</span><span class="tag">#chatterbot</span><span class="tag">#conversation</span><span class="tag">#language</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 14,527</span><span>🍴 4,407</span><span>Python</span></div>
+            <div class="links"><a href="https://github.com/gunthercox/ChatterBot" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="http://docs.chatterbot.us/" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+<footer>本报告由「每日 GitHub 监测助手」自动生成并去重 · 同一项目 30 天内不重复推荐<br>星标与维护状态会变化，使用前请以项目页面为准</footer>
+</div></body></html>
