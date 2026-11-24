@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日 GitHub 实用项目速递 · 2026-11-24</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1f2328;--mut:#5b6572;--line:#e5e8ec;--brand:#2563eb;--accent:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:32px 18px 60px}
+header{text-align:center;padding:18px 0 26px}
+h1{font-size:27px;margin:0 0 8px}
+.sub{color:var(--mut);font-size:14px}
+.summary{background:#eef2ff;border:1px solid #dbe3ff;border-radius:14px;padding:14px 18px;margin:18px 0 26px;color:#33417a;font-size:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:13px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#fafbfc;color:var(--mut);font-weight:600}
+a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-top{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.rank{background:var(--ink);color:#fff;border-radius:8px;padding:2px 9px;font-weight:700;font-size:13px}
+.cat{background:#eef2ff;color:#4338ca;border-radius:20px;padding:2px 11px;font-size:12px}
+.diff{margin-left:auto;font-size:12px;border-radius:20px;padding:2px 11px}
+.diff.easy{background:#dcfce7;color:#166534} .diff.medium{background:#fef3c7;color:#92400e} .diff.hard{background:#fee2e2;color:#991b1b}
+.card h2{font-size:19px;margin:0 0 2px} .repo{color:var(--mut);font-size:12px;margin-bottom:12px}
+.features{margin:0 0 14px;color:#30363d}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.cell{background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:13px}
+.cell.full{grid-column:1/-1} .k{display:block;color:var(--mut);font-size:12px;margin-bottom:3px} .v{color:#25292e}
+.tags{margin:6px 0 12px} .tag{display:inline-block;background:#f1f5f9;color:#475569;border-radius:6px;padding:1px 8px;font-size:11px;margin:0 5px 5px 0}
+.foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px;font-size:13px}
+.metrics{display:flex;gap:14px;color:var(--mut)} .links{display:flex;gap:14px}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:36px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.foot{flex-direction:column;gap:10px}}
+</style></head><body><div class="wrap">
+<header><h1>🛰️ 每日 GitHub 实用项目速递</h1><div class="sub">2026-11-24 · 为普通人筛选的真有用项目</div></header>
+<div class="summary">今日从 GitHub 筛选出 <b>10</b> 个对普通人真正有用的项目，按推荐优先级排序。<br>只看「能不能帮到学习 / 生活 / 效率 / 健康 / 财务」，不堆开发者玩具。</div>
+<table><thead><tr><th>#</th><th>项目</th><th>领域</th><th>推荐分</th></tr></thead><tbody><tr><td>1</td><td><a href='#1'>openGym</a></td><td>💪 健康</td><td>92.2</td></tr><tr><td>2</td><td><a href='#2'>TREK</a></td><td>💰 财务</td><td>92.0</td></tr><tr><td>3</td><td><a href='#3'>super-productivity</a></td><td>⚡ 效率</td><td>88.2</td></tr><tr><td>4</td><td><a href='#4'>windows-clipboard-manager-sync</a></td><td>⚡ 效率</td><td>88.2</td></tr><tr><td>5</td><td><a href='#5'>yuvomi</a></td><td>💰 财务</td><td>87.8</td></tr><tr><td>6</td><td><a href='#6'>GymMane</a></td><td>💪 健康</td><td>84.2</td></tr><tr><td>7</td><td><a href='#7'>quicken-deluxe</a></td><td>💰 财务</td><td>83.6</td></tr><tr><td>8</td><td><a href='#8'>rustyfiles</a></td><td>⚡ 效率</td><td>82.7</td></tr><tr><td>9</td><td><a href='#9'>plain-app</a></td><td>📚 学习</td><td>80.2</td></tr><tr><td>10</td><td><a href='#10'>workout-tracker</a></td><td>💪 健康</td><td>76.7</td></tr></tbody></table>
+
+        <article class="card" id="1">
+          <div class="card-top">
+            <span class="rank">#1</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/DuarteSantos8/openGym" target="_blank" rel="noopener">openGym</a></h2>
+          <div class="repo">DuarteSantos8/openGym</div>
+          <p class="features">Open-source gym &amp; body-weight tracker, now in the App Store (iPhone + Apple Watch) and as an Android APK.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想直接在手机上使用的人；愿意自己搭服务的技术折腾者</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「apple-watch、bodyweight」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">手机 · 自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · AGPL-3.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#apple-watch</span><span class="tag">#bodyweight</span><span class="tag">#docker</span><span class="tag">#fitness</span><span class="tag">#fitness-tracker</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 23,803</span><span>🍴 3,189</span><span>JavaScript</span></div>
+            <div class="links"><a href="https://github.com/DuarteSantos8/openGym" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://opengym.ch" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="2">
+          <div class="card-top">
+            <span class="rank">#2</span>
+            <span class="cat">💰 财务</span>
+            <span class="diff hard">🔴 高（需技术背景）</span>
+          </div>
+          <h2><a href="https://github.com/liketrek/TREK" target="_blank" rel="noopener">TREK</a></h2>
+          <div class="repo">liketrek/TREK</div>
+          <p class="features">The most complete open-source travel planner: real-time collaboration, bookings, budgets, packing lists, journals, offline PWA…</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；想管好收支和预算的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把收支、预算和资产集中到一处查看，少维护几张表格。主要围绕「budget-tracker、collaborative」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · AGPL-3.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#budget-tracker</span><span class="tag">#collaborative</span><span class="tag">#docker</span><span class="tag">#itinerary</span><span class="tag">#mcp-server</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 15,918</span><span>🍴 1,369</span><span>TypeScript</span></div>
+            <div class="links"><a href="https://github.com/liketrek/TREK" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://demo.liketrek.com" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="3">
+          <div class="card-top">
+            <span class="rank">#3</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff easy">🟢 低（开箱即用）</span>
+          </div>
+          <h2><a href="https://github.com/super-productivity/super-productivity" target="_blank" rel="noopener">super-productivity</a></h2>
+          <div class="repo">super-productivity/super-productivity</div>
+          <p class="features">A to-do list, time tracker and daily planner for focused personal work.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想直接在手机上使用的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「android、flowmodoro」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">手机 · 电脑</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#android</span><span class="tag">#flowmodoro</span><span class="tag">#flowtime</span><span class="tag">#habit-tracker</span><span class="tag">#ios</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 24,030</span><span>🍴 2,433</span><span>TypeScript</span></div>
+            <div class="links"><a href="https://github.com/super-productivity/super-productivity" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="http://super-productivity.com?ref=github" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="4">
+          <div class="card-top">
+            <span class="rank">#4</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/umbra0688/windows-clipboard-manager-sync" target="_blank" rel="noopener">windows-clipboard-manager-sync</a></h2>
+          <div class="repo">umbra0688/windows-clipboard-manager-sync</div>
+          <p class="features">Free open-source Windows clipboard manager with searchable history, smart collections, keyboard shortcuts and cloud sync.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">被任务、时间与注意力困扰，想要更自律的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「clipboard、clipboard-history」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">电脑</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-19 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#clipboard</span><span class="tag">#clipboard-history</span><span class="tag">#clipboard-manager</span><span class="tag">#clipboard-organizer</span><span class="tag">#clipboard-sync</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 242</span><span>🍴 1</span><span>Dart</span></div>
+            <div class="links"><a href="https://github.com/umbra0688/windows-clipboard-manager-sync" target="_blank" rel="noopener">GitHub ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="5">
+          <div class="card-top">
+            <span class="rank">#5</span>
+            <span class="cat">💰 财务</span>
+            <span class="diff hard">🔴 高（需技术背景）</span>
+          </div>
+          <h2><a href="https://github.com/ulsklyc/yuvomi" target="_blank" rel="noopener">yuvomi</a></h2>
+          <div class="repo">ulsklyc/yuvomi</div>
+          <p class="features">One home instead of many subscriptions.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；想管好收支和预算的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把收支、预算和资产集中到一处查看，少维护几张表格。主要围绕「calendar、docker」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#calendar</span><span class="tag">#docker</span><span class="tag">#family</span><span class="tag">#family-planner</span><span class="tag">#home-assistant</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 2,468</span><span>🍴 232</span><span>JavaScript</span></div>
+            <div class="links"><a href="https://github.com/ulsklyc/yuvomi" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://yuvomi.cloud/" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="6">
+          <div class="card-top">
+            <span class="rank">#6</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/InlitX/GymMane" target="_blank" rel="noopener">GymMane</a></h2>
+          <div class="repo">InlitX/GymMane</div>
+          <p class="features">Offline gym log for Android.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想直接在手机上使用的人；关注健康习惯的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「android、bodybuilding」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">手机 · 自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-22 · GPL-3.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#android</span><span class="tag">#bodybuilding</span><span class="tag">#dart</span><span class="tag">#exercises</span><span class="tag">#f-droid</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 1,957</span><span>🍴 222</span><span>Dart</span></div>
+            <div class="links"><a href="https://github.com/InlitX/GymMane" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://inlitx.github.io/GymMane/" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="7">
+          <div class="card-top">
+            <span class="rank">#7</span>
+            <span class="cat">💰 财务</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/cr4zyp4ul/quicken-deluxe" target="_blank" rel="noopener">quicken-deluxe</a></h2>
+          <div class="repo">cr4zyp4ul/quicken-deluxe</div>
+          <p class="features">Quicken Deluxe: Comprehensive Desktop Financial Management with Budgeting and Reporting</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想管好收支和预算的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把收支、预算和资产集中到一处查看，少维护几张表格。主要围绕「automation、developer-tools」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">电脑</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#automation</span><span class="tag">#developer-tools</span><span class="tag">#free-quicken-download</span><span class="tag">#open-source</span><span class="tag">#python</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 339</span><span>🍴 0</span><span>HTML</span></div>
+            <div class="links"><a href="https://github.com/cr4zyp4ul/quicken-deluxe" target="_blank" rel="noopener">GitHub ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="8">
+          <div class="card-top">
+            <span class="rank">#8</span>
+            <span class="cat">⚡ 效率</span>
+            <span class="diff medium">🟡 中（需简单配置）</span>
+          </div>
+          <h2><a href="https://github.com/gelenmedya/rustyfiles" target="_blank" rel="noopener">rustyfiles</a></h2>
+          <div class="repo">gelenmedya/rustyfiles</div>
+          <p class="features">A fast file manager for Windows and macOS that never freezes: tabs, dual panes, archives as folders, Quick Look-style previews.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">被任务、时间与注意力困扰，想要更自律的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把待办、专注计时和复盘放在一起，减少来回切换。主要围绕「archive-manager、desktop-app」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">电脑</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · MIT</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#archive-manager</span><span class="tag">#desktop-app</span><span class="tag">#dual-pane</span><span class="tag">#explorer-alternative</span><span class="tag">#file-browser</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 578</span><span>🍴 41</span><span>Rust</span></div>
+            <div class="links"><a href="https://github.com/gelenmedya/rustyfiles" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://rustyfiles.com" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="9">
+          <div class="card-top">
+            <span class="rank">#9</span>
+            <span class="cat">📚 学习</span>
+            <span class="diff easy">🟢 低（开箱即用）</span>
+          </div>
+          <h2><a href="https://github.com/plainhub/plain-app" target="_blank" rel="noopener">plain-app</a></h2>
+          <div class="repo">plainhub/plain-app</div>
+          <p class="features">🔥 PlainApp is an open-source app that lets you securely manage your phone from a web browser.</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">想直接在手机上使用的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把学习计划、笔记和复习串起来，减少临时抱佛脚。主要围绕「android、android-app」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">手机 · 电脑</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · AGPL-3.0</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#android</span><span class="tag">#android-app</span><span class="tag">#compose</span><span class="tag">#compose-ui</span><span class="tag">#f-droid</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 7,260</span><span>🍴 452</span><span>Kotlin</span></div>
+            <div class="links"><a href="https://github.com/plainhub/plain-app" target="_blank" rel="noopener">GitHub ↗</a><a class="home" href="https://plainapp.app" target="_blank" rel="noopener">官网 ↗</a></div>
+          </div>
+        </article>
+        <article class="card" id="10">
+          <div class="card-top">
+            <span class="rank">#10</span>
+            <span class="cat">💪 健康</span>
+            <span class="diff hard">🔴 高（需技术背景）</span>
+          </div>
+          <h2><a href="https://github.com/jovandeginste/workout-tracker" target="_blank" rel="noopener">workout-tracker</a></h2>
+          <div class="repo">jovandeginste/workout-tracker</div>
+          <p class="features">A workout tracking web application for personal use (or family, friends), geared towards running and other GPX-based activities</p>
+          <div class="grid">
+            <div class="cell"><span class="k">👥 适合人群</span><span class="v">愿意自己搭服务的技术折腾者；关注健康习惯的人</span></div>
+            <div class="cell"><span class="k">💡 实用价值</span><span class="v">把运动、睡眠或习惯记录下来，看到趋势更容易坚持。主要围绕「docker、fitness-tracker」。</span></div>
+            <div class="cell"><span class="k">📦 平台</span><span class="v">网页 · 自托管</span></div>
+            <div class="cell"><span class="k">🕒 最近更新 · 📄 许可证</span><span class="v">2026-11-24 · 未标注</span></div>
+            <div class="cell full"><span class="k">⚠️ 注意事项</span><span class="v">近期仍在活跃更新；未标注开源许可证，商用前请自行确认；建议先读 README 和最新 Issue</span></div>
+          </div>
+          <div class="tags"><span class="tag">#docker</span><span class="tag">#fitness-tracker</span><span class="tag">#go</span><span class="tag">#gpx</span><span class="tag">#leaflet</span></div>
+          <div class="foot">
+            <div class="metrics"><span>⭐ 1,253</span><span>🍴 56</span><span>Go</span></div>
+            <div class="links"><a href="https://github.com/jovandeginste/workout-tracker" target="_blank" rel="noopener">GitHub ↗</a></div>
+          </div>
+        </article>
+<footer>本报告由「每日 GitHub 监测助手」自动生成并去重 · 同一项目 30 天内不重复推荐<br>星标与维护状态会变化，使用前请以项目页面为准</footer>
+</div></body></html>
